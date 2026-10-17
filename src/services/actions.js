@@ -27,6 +27,30 @@ function who(user) {
 let seq = 0;
 const nextSeq = () => ++seq;
 
+// When the photos or the claimed lines of a checked period change, the check no longer describes them:
+// it is marked stale, its decisions stop counting downstream, and a person must run it again.
+async function markCheckStale(store, projectId, period, why) {
+  const per = await store.get('periods', periodId(projectId, period));
+  if (per && per.check && !per.checkStale) await store.update('periods', per.id, { checkStale: true, checkStaleReason: why, checkStaleAt: new Date().toISOString() });
+}
+
+// Checks a contractor submission without writing anything (so a visitor copy is only created for valid ones).
+async function validateContractorSubmission({ project, period, claims, files }) {
+  checkPeriod(period);
+  const norm = normaliseClaims(project, claims || []);
+  if (!norm.length && !(files || []).length) throw new UserError('Add at least one percent or one photo.');
+  for (const f of files || []) {
+    if (!f.buffer || !f.buffer.length) throw new UserError('Empty file.');
+    if (!/^image\/(jpeg|png|webp|heic|heif)$/.test(f.mimetype || '')) throw new UserError('Upload a JPEG, PNG, WebP or HEIC photo.');
+    try {
+      await features(f.buffer);
+    } catch (e) {
+      throw new UserError('That file could not be read as a photo.');
+    }
+  }
+  return norm;
+}
+
 async function addPhoto({ store, photoStore, project, period, buffer, fileName, contentType, user, source, stampText, recorded, createdAt }) {
   checkPeriod(period);
   if (!buffer || !buffer.length) throw new UserError('Empty file.');
@@ -66,11 +90,13 @@ async function addPhoto({ store, photoStore, project, period, buffer, fileName, 
     createdAt: createdAt || new Date().toISOString()
   };
   await store.set('photos', id, doc);
+  if (source !== 'transmittal') await markCheckStale(store, project.id, period, 'A photo was added after the check.');
   return doc;
 }
 
 async function setStamp({ store, photo, stampText }) {
   await store.update('photos', photo.id, { stampText: String(stampText || '').slice(0, 60) });
+  if (photo.source !== 'transmittal') await markCheckStale(store, photo.projectId, photo.period, 'A printed stamp was changed after the check.');
 }
 
 // Claims arrive as [{lineKey, claimedPct}] from the contractor or are typed by the office.
@@ -94,6 +120,7 @@ async function setClaims({ store, project, period, claims, user, source, today }
   const per = await getOrCreatePeriod(store, project, period);
   const norm = normaliseClaims(project, claims);
   await store.update('periods', per.id, { claims: norm, claimsSource: source, claimsUpdatedAt: new Date().toISOString(), claimsUpdatedBy: user ? who(user) : { name: 'Contractor', role: 'contractor' } });
+  await markCheckStale(store, project.id, period, 'The claimed lines changed after the check.');
   if (source === 'office' && user) {
     // Credit: the office entered the contractor's claim for them.
     const subs = await store.find('submissions', { projectId: project.id, period });
@@ -127,6 +154,7 @@ async function decideLine({ store, project, period, lineKey, decision, reason, u
   if (r.length < 3) throw new UserError('Give a reason for every decision.');
   const per = await store.get('periods', periodId(project.id, period));
   if (!per || !per.check) throw new UserError('Run the check for this period first.');
+  if (per.checkStale) throw new UserError(`${per.checkStaleReason || 'The photos or claims changed after the check.'} Run the check again before deciding.`);
   const line = per.check.lines.find((l) => l.lineKey === lineKey);
   if (!line) throw new UserError('That line is not in this period.');
   const overrode = line.aiDefault !== decision;
@@ -243,6 +271,8 @@ async function contractorSubmit({ store, photoStore, project, period, claims, fi
 
 module.exports = {
   UserError,
+  validateContractorSubmission,
+  markCheckStale,
   addPhoto,
   setStamp,
   setClaims,

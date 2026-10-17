@@ -35,7 +35,7 @@
       <h2>Judges and organisers</h2>
       ${meta.access.judge
         ? '<p class="small" data-testid="judge-on">Judge access is on in this browser: live Gemini runs and drafts are available (within a daily limit).</p>'
-        : `<p class="small">Everything here works without a code: every screen opens on a saved Gemini run. To run Gemini live on new photos or draft a note, enter the access code from the submission form.</p>
+        : `<p class="small">You can open every screen without a code. The supplied demo months open on saved Gemini runs, and the seeded April decisions have saved drafts. Anything new (new photos, changed claims or decisions) needs a live run: enter the access code from the submission form.</p>
            <form id="judgeForm" class="row"><label>Access code <input id="judgeCode" type="password" autocomplete="off" data-testid="judge-code"></label><button class="btn" type="submit">Turn on live AI</button><span id="judgeMsg" class="small"></span></form>`}
     </section>` : ''}`;
   const jf = document.getElementById('judgeForm');

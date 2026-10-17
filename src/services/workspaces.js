@@ -10,7 +10,7 @@ const WS_COOKIE = 'pop_ws';
 const JUDGE_COOKIE = 'pop_judge';
 
 function createWorkspaces({ rootStore, config, dayFn }) {
-  // One creation at a time (the service runs as one instance), so the daily count cannot be raced.
+  // One creation at a time in this instance; the daily counter itself is a transaction (see createNow).
   let chain = Promise.resolve();
   function create() {
     const run = chain.then(createNow, createNow);
@@ -19,13 +19,17 @@ function createWorkspaces({ rootStore, config, dayFn }) {
   }
   async function createNow() {
     const day = dayFn();
-    const lim = (await rootStore.get('limits', `day_${day}`)) || { workspaces: 0 };
-    if (lim.workspaces >= config.workspacesPerDay) {
+    // A transaction on the shared daily counter, so separate instances cannot both take the last place.
+    const ok = await rootStore.transact('limits', `day_${day}`, (cur) => {
+      const n = (cur && cur.workspaces) || 0;
+      if (n >= config.workspacesPerDay) return { result: false };
+      return { doc: { workspaces: n + 1 }, result: true };
+    });
+    if (!ok) {
       const e = new Error('The demo has reached today\'s limit of new visitor copies. You can still look around; please try again tomorrow.');
       e.status = 429;
       throw e;
     }
-    await rootStore.set('limits', `day_${day}`, { workspaces: lim.workspaces + 1 });
     const id = `w${crypto.randomBytes(9).toString('hex')}`;
     const expiresAt = new Date(Date.now() + config.workspaceHours * 3600 * 1000).toISOString();
     const from = rootStore.scope(TEMPLATE);

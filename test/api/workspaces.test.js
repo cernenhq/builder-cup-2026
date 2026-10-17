@@ -122,3 +122,33 @@ test('after a new check run, old decisions no longer count downstream until a pe
   assert.ok(after.json.check.lines.every((l) => !l.decision));
   assert.ok(after.json.check.lines.some((l) => l.earlierDecision));
 });
+
+test('changing the claims after a check marks it stale: decisions stop counting and deciding is refused', async () => {
+  const v = visitor();
+  await v.call('POST', '/api/auth/login', { userId: 'eng-ana' });
+  const per = await v.call('GET', '/api/projects/P-001/periods/2026-04');
+  const claims = per.json.claims.map((c) => ({ lineKey: c.lineKey, claimedPct: c.claimedPct === 100 ? 90 : 100 }));
+  assert.equal((await v.call('PUT', '/api/projects/P-001/periods/2026-04/claims', { claims })).status, 200);
+  const after = await v.call('GET', '/api/projects/P-001/periods/2026-04');
+  assert.equal(after.json.checkStale, true);
+  assert.ok(after.json.check.lines.every((l) => !l.decision));
+  const d = await v.call('POST', '/api/projects/P-001/periods/2026-04/decisions', { lineKey: 're', decision: 'supported', reason: 'Visible in the photo' });
+  assert.equal(d.status, 400);
+  assert.match(d.json.error, /Run the check again/);
+  assert.equal((await v.call('POST', '/api/projects/P-001/periods/2026-04/check', {})).status, 200);
+  assert.equal((await v.call('GET', '/api/projects/P-001/periods/2026-04')).json.checkStale, false);
+});
+
+test('an invalid submission on a valid contractor link creates no copy', async () => {
+  const before = (await S.built.rootStore.find('limits', {})).reduce((n, d) => n + d.workspaces, 0);
+  const v = visitor();
+  for (const form of [{ claims: '{not json', period: '2026-05' }, { claims: '[]', period: '2026-05' }, { claims: '[{"lineKey":"zz","claimedPct":50}]', period: '2026-05' }, { claims: '[]', period: 'May' }]) {
+    const fd = new FormData();
+    for (const [k, val] of Object.entries(form)) fd.append(k, val);
+    const r = await S.call('POST', '/api/contractor/demo-P-002-uno-link/submissions', { form: fd });
+    assert.equal(r.status, 400, JSON.stringify(form));
+  }
+  assert.ok(!v.jar.has('pop_ws'));
+  const after = (await S.built.rootStore.find('limits', {})).reduce((n, d) => n + d.workspaces, 0);
+  assert.equal(after, before);
+});

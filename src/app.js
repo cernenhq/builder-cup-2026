@@ -49,10 +49,24 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     res.on('close', release);
     next();
   };
-  async function photoRoomLeft() {
-    if (!config.workspaces) return true;
-    return (await store.find('photos', {})).length < MAX_PHOTOS_PER_COPY;
+  // One photo limit for every route that stores photos, counting the files in this request. Uploads into
+  // the same copy run one at a time, so two requests cannot both pass the count.
+  const copyLocks = new Map();
+  function inCopyLock(fn) {
+    const k = (als.getStore() || {}).ws || MAIN;
+    const run = (copyLocks.get(k) || Promise.resolve()).then(fn, fn);
+    const tail = run.catch(() => {});
+    copyLocks.set(k, tail);
+    tail.then(() => {
+      if (copyLocks.get(k) === tail) copyLocks.delete(k);
+    });
+    return run;
   }
+  async function photoRoomFor(incoming) {
+    if (!config.workspaces || !incoming) return true;
+    return (await store.find('photos', {})).length + incoming <= MAX_PHOTOS_PER_COPY;
+  }
+  const photoLimitMsg = `A visitor copy of the demo holds at most ${MAX_PHOTOS_PER_COPY} photos.`;
   const today = () => clock.today();
   const isSecure = (req) => req.secure || config.production;
 
@@ -273,7 +287,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
           ...per.check,
           lines: per.check.lines.map((l) => {
             const d = eff.get(`${period}|${l.lineKey}`);
-            const cur = d && d.checkRunId === per.check.runId;
+            const cur = d && d.checkRunId === per.check.runId && !per.checkStale;
             const shape = (x) => ({ decision: x.decision, reason: x.reason, by: x.by, at: x.at, overrode: x.overrode });
             // A decision made on an earlier run is shown for reference only: the new run waits for a person.
             return { ...l, decision: cur ? shape(d) : null, earlierDecision: d && !cur ? shape(d) : null };
@@ -287,6 +301,8 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
       status: per.status,
       claims: per.claims || [],
       claimsSource: per.claimsSource || null,
+      checkStale: !!per.checkStale,
+      checkStaleReason: per.checkStaleReason || null,
       claimsUpdatedAt: per.claimsUpdatedAt || null,
       claimsUpdatedBy: per.claimsUpdatedBy || null,
       percentComplete: per.percentComplete || null,
@@ -304,16 +320,23 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   app.post('/api/projects/:id/periods/:period/photos', allow('engineer', 'reviewer'), uploadGate, upload.array('photos', 8), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p || !requireWrite(req, res, p)) return;
-    if (!(await photoRoomLeft())) return res.status(403).json({ error: `This copy of the demo already holds ${MAX_PHOTOS_PER_COPY} photos, the limit for a visitor copy.` });
     const stamps = [].concat((req.body && req.body.stampText) || []);
     const out = [];
+    let full = false;
     try {
-      for (const [i, f] of (req.files || []).entries()) {
-        out.push(photoMeta(await A.addPhoto({ store, photoStore, project: p, period: req.params.period, buffer: f.buffer, fileName: f.originalname, contentType: f.mimetype, user: req.user, source: 'office', stampText: stamps[i] || stamps[0] || '' })));
-      }
+      await inCopyLock(async () => {
+        if (!(await photoRoomFor((req.files || []).length))) {
+          full = true;
+          return;
+        }
+        for (const [i, f] of (req.files || []).entries()) {
+          out.push(photoMeta(await A.addPhoto({ store, photoStore, project: p, period: req.params.period, buffer: f.buffer, fileName: f.originalname, contentType: f.mimetype, user: req.user, source: 'office', stampText: stamps[i] || stamps[0] || '' })));
+        }
+      });
     } catch (e) {
       return sendErr(res, e);
     }
+    if (full) return res.status(403).json({ error: photoLimitMsg });
     if (!out.length) return res.status(400).json({ error: 'Choose at least one photo.' });
     res.json({ photos: out });
   }));
@@ -399,7 +422,11 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     const p = await loadProject(req, res);
     if (!p || !requireWrite(req, res, p)) return;
     try {
-      const t = await A.logTransmittal({ store, photoStore, project: p, input: req.body || {}, user: req.user, photo: req.file || null, today: today() });
+      const t = await inCopyLock(async () => {
+        if (!(await photoRoomFor(req.file ? 1 : 0))) return null;
+        return A.logTransmittal({ store, photoStore, project: p, input: req.body || {}, user: req.user, photo: req.file || null, today: today() });
+      });
+      if (!t) return res.status(403).json({ error: photoLimitMsg });
       res.json({ transmittal: t });
     } catch (e) {
       sendErr(res, e);
@@ -621,22 +648,30 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     if (await projectByToken(req, res)) next();
   });
   app.post('/api/contractor/:token/submissions', contractorGate, uploadGate, upload.array('photos', 8), wrap(async (req, res) => {
-    try {
-      await req.ensureWorkspace();
-    } catch (e) {
-      return res.status(e.status || 500).json({ error: e.message });
-    }
-    if ((req.files || []).length && !(await photoRoomLeft())) return res.status(403).json({ error: `This copy of the demo already holds ${MAX_PHOTOS_PER_COPY} photos, the limit for a visitor copy.` });
-    const p = await projectByToken(req, res);
-    if (!p) return;
+    // Everything is checked against the seeded project first; only a valid submission gets a copy.
     let claims = [];
     try {
       claims = JSON.parse((req.body && req.body.claims) || '[]');
     } catch (e) {
       return res.status(400).json({ error: 'Claims could not be read.' });
     }
+    const period = String((req.body || {}).period || '');
     try {
-      const s = await A.contractorSubmit({ store, photoStore, project: p, period: String((req.body || {}).period || ''), claims, files: req.files || [], note: (req.body || {}).note });
+      const before = await projectByToken(req, res);
+      if (!before) return;
+      await A.validateContractorSubmission({ project: before, period, claims, files: req.files || [] });
+      await req.ensureWorkspace();
+    } catch (e) {
+      return res.status(e.status || 400).json({ error: e.message });
+    }
+    const p = await projectByToken(req, res);
+    if (!p) return;
+    try {
+      const s = await inCopyLock(async () => {
+        if (!(await photoRoomFor((req.files || []).length))) return null;
+        return A.contractorSubmit({ store, photoStore, project: p, period, claims, files: req.files || [], note: (req.body || {}).note });
+      });
+      if (!s) return res.status(403).json({ error: photoLimitMsg });
       res.json({ received: true, id: s.id, receivedAt: s.receivedAt, lines: s.claims.length, photos: s.photoIds.length, status: 'Received. Waiting for the office to check it.' });
     } catch (e) {
       sendErr(res, e);

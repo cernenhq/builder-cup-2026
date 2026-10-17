@@ -5,7 +5,7 @@ const sharp = require('sharp');
 const { GoogleGenAI } = require('@google/genai');
 const { VERDICT_SCHEMA, validateFindings } = require('./schema');
 const { promptFor } = require('./prompt');
-const { estimateUsd } = require('./spend');
+const { estimateUsd, maxUsd } = require('./spend');
 
 // Preference order when no model is pinned; otherwise the newest general "flash" model available.
 const PREFERRED = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3-flash', 'gemini-2.5-flash'];
@@ -16,6 +16,13 @@ const MAX_PHOTOS = 4;
 const MAX_LINES = 20;
 const MAX_OUTPUT_TOKENS_READER = 15000;
 const MAX_OUTPUT_TOKENS_NOTE = 2000;
+// Input bounds, checked before anything is reserved or sent. Token counts are estimated high: at most
+// one token per 3 characters of prompt, and 2,000 tokens per photo (photos are shrunk to 1280 px).
+const MAX_TEXT_PER_LINE = 400;
+const MAX_PROMPT_CHARS = 30000;
+const MAX_NOTE_PROMPT_CHARS = 12000;
+const CHARS_PER_TOKEN_LOW = 3;
+const TOKENS_PER_PHOTO_HIGH = 2000;
 
 function withTimeout(promise, ms) {
   let t;
@@ -57,10 +64,33 @@ function createGeminiReaders({ apiKey, vertex, model, modelB, client }) {
     return { inlineData: { mimeType: 'image/jpeg', data: jpg.toString('base64') } };
   }
 
-  async function read(reader, input) {
+  // The prompt and the most this call can cost, or a refusal when the request is over the size limits.
+  async function plan(reader, input) {
     const m = reader === 'B' && modelB ? modelB : await resolveModel();
-    if (input.claims.length > MAX_LINES) return { mode: 'gemini', model: m, ok: false, error: `A live check takes at most ${MAX_LINES} claimed lines at a time.` };
+    if (input.claims.length > MAX_LINES) return { model: m, error: `A live check takes at most ${MAX_LINES} claimed lines at a time.` };
+    if (input.claims.some((c) => String(c.statement || '').length > MAX_TEXT_PER_LINE || String(c.question || '').length > MAX_TEXT_PER_LINE)) {
+      return { model: m, error: `Each claimed line and its question must be under ${MAX_TEXT_PER_LINE} characters for a live check.` };
+    }
     const text = promptFor(reader, input);
+    if (text.length > MAX_PROMPT_CHARS) return { model: m, error: 'This request is too long for a live check.' };
+    const photos = Math.min(MAX_PHOTOS, input.photos.length);
+    const inputTokens = Math.ceil(text.length / CHARS_PER_TOKEN_LOW) + photos * TOKENS_PER_PHOTO_HIGH;
+    return { model: m, text, maxUsd: maxUsd(m, inputTokens, MAX_OUTPUT_TOKENS_READER) };
+  }
+  async function estimateRead(reader, input) {
+    const p = await plan(reader, input);
+    return p.error ? { ok: false, model: p.model, error: p.error } : { ok: true, model: p.model, maxUsd: p.maxUsd };
+  }
+  function estimateWrite(prompt) {
+    if (prompt.length > MAX_NOTE_PROMPT_CHARS) return { ok: false, error: 'This note request is too long.' };
+    return { ok: true, maxUsd: maxUsd(resolved || model || 'unknown', Math.ceil(prompt.length / CHARS_PER_TOKEN_LOW), MAX_OUTPUT_TOKENS_NOTE) };
+  }
+
+  async function read(reader, input) {
+    const p = await plan(reader, input);
+    const m = p.model;
+    if (p.error) return { mode: 'gemini', model: m, ok: false, error: p.error };
+    const text = p.text;
     const parts = [{ text }];
     for (const p of input.photos.slice(0, MAX_PHOTOS)) parts.push(await imagePart(p.buffer));
     const t0 = Date.now();
@@ -91,6 +121,7 @@ function createGeminiReaders({ apiKey, vertex, model, modelB, client }) {
   // Plain text generation (the drafted notes). Returns { ok, text, model, ms, usage, usd } or { ok: false, error }.
   async function write(prompt) {
     const m = await resolveModel();
+    if (prompt.length > MAX_NOTE_PROMPT_CHARS) return { ok: false, model: m, error: 'This note request is too long.' };
     const t0 = Date.now();
     try {
       const res = await withTimeout(ai.models.generateContent({ model: m, contents: [{ role: 'user', parts: [{ text: prompt }] }], config: { temperature: 0.4, maxOutputTokens: MAX_OUTPUT_TOKENS_NOTE } }), CALL_TIMEOUT_MS);
@@ -105,7 +136,7 @@ function createGeminiReaders({ apiKey, vertex, model, modelB, client }) {
     }
   }
 
-  return { mode: 'gemini', read, write, resolveModel };
+  return { mode: 'gemini', read, write, resolveModel, estimateRead, estimateWrite };
 }
 
-module.exports = { createGeminiReaders, MAX_LINES, MAX_PHOTOS, MAX_OUTPUT_TOKENS_READER, MAX_OUTPUT_TOKENS_NOTE };
+module.exports = { createGeminiReaders, MAX_LINES, MAX_PHOTOS, MAX_OUTPUT_TOKENS_READER, MAX_OUTPUT_TOKENS_NOTE, MAX_PROMPT_CHARS, MAX_TEXT_PER_LINE };

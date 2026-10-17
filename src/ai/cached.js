@@ -37,7 +37,10 @@ function createCachedReaders({ live, rootStore, store, spend, canSpend, shareLiv
     const seed = await rootStore.get('aicache', seedKey);
     if (seed) return { ...seed.result, mode: 'saved', savedAt: seed.at, recordedWithoutCorrections: (input.corrections || []).length > 0 };
     if (!(await canSpend())) return { mode: 'needs_code', model, ok: false, error: 'The AI reading needs the judge access code.' };
-    const ticket = spend ? await spend.reserve('reader') : { amount: 0 };
+    // Size limits first, then reserve the most this call can cost.
+    const est = live.estimateRead ? await live.estimateRead(reader, input) : { ok: true, maxUsd: 0.14 };
+    if (!est.ok) return { mode: 'gemini', model, ok: false, error: est.error };
+    const ticket = spend ? await spend.reserve('reader', est.maxUsd) : { amount: 0 };
     if (!ticket) return { mode: 'needs_code', model, ok: false, capReached: true, error: "Today's live AI budget for the demo is used up, or its ledger could not be written. Saved runs still work; please try again later." };
     let r;
     try {
@@ -52,7 +55,7 @@ function createCachedReaders({ live, rootStore, store, spend, canSpend, shareLiv
     }
     return r;
   }
-  return { mode: 'gemini', read, resolveModel: live.resolveModel, write: live.write };
+  return { mode: 'gemini', read, resolveModel: live.resolveModel, write: live.write, estimateWrite: live.estimateWrite };
 }
 
 module.exports = { createCachedReaders, inputKey, fullKey };

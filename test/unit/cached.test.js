@@ -80,18 +80,16 @@ test('the cap holds under 40 simultaneous live requests; nothing is lost when th
   // Reservation 0.14 each: at most 7 calls fit under US$1 at once; the rest are refused.
   assert.equal(started, 7);
   assert.equal(res.filter((x) => x.capReached).length, 33);
-  const st = spend.state();
+  const st = await spend.state();
   assert.equal(st.reserved, 0);
   assert.ok(Math.abs(st.spent - 7 * 0.05) < 1e-9, `spent ${st.spent}`);
   assert.equal(st.calls, 7);
-  const persisted = await root.get('spend', 'day_2026-10-18');
-  assert.ok(Math.abs(persisted.usd - st.spent) < 1e-9, 'the stored total matches, no lost update');
   // With the room freed, later calls fit again until the cap: (1 - 0.35) / 0.14 = 4 more at once.
   started = 0;
   const more = Array.from({ length: 10 }, (_, i) => ({ ...input, claims: [{ ...input.claims[0], id: `R${i}` }] }));
   await Promise.all(more.map((inp) => r.read('A', inp)));
   assert.equal(started, 4);
-  assert.ok(spend.state().spent <= 1);
+  assert.ok((await spend.state()).spent <= 1);
 });
 
 test('a failed or timed-out call keeps its full reservation as spent', async () => {
@@ -100,7 +98,7 @@ test('a failed or timed-out call keeps its full reservation as spent', async () 
   const spend = createSpendGuard({ rootStore: root, capUsd: 3, dayFn: () => '2026-10-18' });
   const r = createCachedReaders({ live: failing, rootStore: root, spend, canSpend: async () => true });
   await r.read('A', input);
-  assert.ok(Math.abs(spend.state().spent - 0.14) < 1e-9);
+  assert.ok(Math.abs((await spend.state()).spent - 0.14) < 1e-9);
 });
 
 test('the reservation is stored before the call; if the ledger cannot be written, no paid call is made', async () => {
@@ -118,7 +116,7 @@ test('the reservation is stored before the call; if the ledger cannot be written
   assert.ok(seenDuringCall && Math.abs(seenDuringCall.reserved - 0.14) < 1e-9);
   // A ledger that cannot be written refuses the call.
   const broken = createMemoryStore();
-  broken.set = async () => {
+  broken.transact = async () => {
     throw new Error('write failed');
   };
   const live2 = fakeLive();
@@ -133,16 +131,16 @@ test('after a restart, open reservations in the store count as spent', async () 
   const root = createMemoryStore();
   await root.set('spend', 'day_2026-10-18', { usd: 2.8, reserved: 0.15, calls: 40 });
   const spend = createSpendGuard({ rootStore: root, capUsd: 3, dayFn: () => '2026-10-18' });
-  assert.equal(await spend.reserve('reader'), null);
-  assert.ok(await spend.reserve('note'));
+  assert.equal(await spend.reserve('reader', 0.14), null);
+  assert.ok(await spend.reserve('note', 0.02));
 });
 
 test('after a restart the guard starts from the stored total', async () => {
   const root = createMemoryStore();
   await root.set('spend', 'day_2026-10-18', { usd: 2.95, calls: 40 });
   const spend = createSpendGuard({ rootStore: root, capUsd: 3, dayFn: () => '2026-10-18' });
-  assert.equal(await spend.reserve('reader'), null);
-  assert.ok(await spend.reserve('note'));
+  assert.equal(await spend.reserve('reader', 0.14), null);
+  assert.ok(await spend.reserve('note', 0.02));
 });
 
 test('spend estimate uses token counts', () => {
@@ -165,4 +163,28 @@ test('draft note: decisions only, needs the code unless a saved draft matches', 
   const replay = await draftNote({ ...base, judge: false });
   assert.equal(replay.saved, true);
   assert.equal(live.calls.filter((c) => c === 'write').length, 1);
+});
+
+test('two instances sharing one ledger cannot both pass the cap', async () => {
+  const root = createMemoryStore();
+  const a = createSpendGuard({ rootStore: root, capUsd: 0.14, dayFn: () => '2026-10-18' });
+  const b = createSpendGuard({ rootStore: root, capUsd: 0.14, dayFn: () => '2026-10-18' });
+  const [ta, tb] = await Promise.all([a.reserve('reader', 0.14), b.reserve('reader', 0.14)]);
+  assert.equal([ta, tb].filter(Boolean).length, 1);
+  await a.settle(ta || tb, 0.1);
+  const st = await b.state();
+  assert.ok(Math.abs(st.spent - 0.1) < 1e-9 && st.reserved === 0);
+});
+
+test('live calls over the size limits are refused before anything is reserved', async () => {
+  const { createGeminiReaders, MAX_TEXT_PER_LINE } = require('../../src/ai/gemini');
+  const g = createGeminiReaders({ client: { models: { generateContent: async () => ({ text: '{}' }) } }, model: 'gemini-3.8-flash' });
+  const long = { ...input, claims: [{ id: 'Q1', statement: 'x'.repeat(MAX_TEXT_PER_LINE + 1), question: 'q' }] };
+  const e = await g.estimateRead('A', long);
+  assert.equal(e.ok, false);
+  const ok = await g.estimateRead('A', input);
+  assert.ok(ok.ok && ok.maxUsd > 0 && ok.maxUsd < 0.14, `maxUsd ${ok.maxUsd}`);
+  // The worst case allowed by the limits stays under the reservation used in the README (US$0.14).
+  const { maxUsd } = require('../../src/ai/spend');
+  assert.ok(maxUsd('gemini-3.8-flash', 30000 / 3 + 4 * 2000, 15000) < 0.14);
 });

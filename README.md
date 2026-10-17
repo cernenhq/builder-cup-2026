@@ -42,11 +42,11 @@ The saved Gemini run for project P-001 was scored once against a fixed reference
 
 - The AI default never said "supported" where the reference did not (0 times).
 - On reference lines, the readers disagreed 2 times (no default; the person decides) and gave no answer 3 times.
-- In this run, calls for two months timed out or failed, and those lines count as no answer: September 2025 (both readers) and May 2026 (reader B only).
+- In this run, calls for two months timed out or failed. September 2025 had no answer from either reader, so its lines count as no answer. In May 2026 only reader B failed; those lines took their default from reader A alone.
 - Median model call: 41 s. Estimated spend for the run: US$0.83.
 - One run, so this is not a noise estimate. The team wrote the prompt, the claims and the reference labels, so this is development data.
 
-[`eval/R2b_retry_timedout_months_2026-10-17T2216.md`](eval/R2b_retry_timedout_months_2026-10-17T2216.md) is a retry of the months that had no full answer, run only so the demo has saved answers for them. It is not the scored run and was not re-scored.
+[`eval/R2b_retry_timedout_months_2026-10-17T2216.md`](eval/R2b_retry_timedout_months_2026-10-17T2216.md) is a retry of the months that had no full answer, run only so the demo has saved answers for them. Its report includes aggregate figures because the same script wrote it, but it does not replace the headline score above, which comes from the single scored run.
 
 **April 2026, expected results on the saved run:**
 
@@ -101,7 +101,7 @@ Run on 18 Oct 2026 on the development machine, Node 24.18.0. The Firestore emula
 | Step | What | Result (18 Oct 2026) |
 |---|---|---|
 | 1 | Secret scan (8 patterns: Google API keys, service-account keys, private keys, OAuth tokens, AWS, GitHub, Slack, hard-coded session secret) | clean |
-| 2 | Unit tests (`npm run test:unit`) and API tests (`npm run test:api`), in-memory store | 54 of 54 and 21 of 21 passed |
+| 2 | Unit tests (`npm run test:unit`) and API tests (`npm run test:api`), in-memory store | 56 of 56 and 23 of 23 passed |
 | 3 | Storage contract and API tests on the Firestore emulator | not run (no Java) |
 | 4 | Browser tests, in-memory store (`npx playwright test`) | 22 of 22 passed |
 | 5 | Browser tests, Firestore emulator | not run (no Java) |
@@ -277,7 +277,7 @@ What they set up:
 
 Notes:
 - Every Gemini call and every check run writes one structured log line (`gemini_call`, `check_run`) with latency, tokens and estimated cost, so Cloud Logging gives the time per claimed line.
-- The daily cap (`DAILY_CAP_USD`, US$3) is an estimate, not a limit on the cloud account: also set a budget alert in the Google Cloud console. The Flash 3.8 price is not yet confirmed on Google's price page, so `src/ai/spend.js` prices it conservatively (US$1.50 per million input tokens, US$7.50 per million output tokens, thinking included). Each live call is bounded (`src/ai/gemini.js`): at most 4 photos, 20 claimed lines, and an output-token limit of 15,000 per reader call and 2,000 per draft, thinking included. Before it starts, each call reserves room for its largest estimated cost (US$0.14 per reader call, US$0.02 per draft); if the cap has no room, or the reservation cannot be written to the ledger, the call does not run. The service runs as one instance (`max-instances 1`). A call that fails or times out keeps its reservation as spent.
+- The daily cap (`DAILY_CAP_USD`, US$3) is an estimate, not a limit on the cloud account: also set a budget alert in the Google Cloud console. The Flash 3.8 price is not yet confirmed on Google's price page, so `src/ai/spend.js` prices it conservatively (US$1.50 per million input tokens, US$7.50 per million output tokens, thinking included). Each live call is bounded (`src/ai/gemini.js`): at most 4 photos, 20 claimed lines, and an output-token limit of 15,000 per reader call and 2,000 per draft, thinking included. Requests over the size limits (each claimed line and question under 400 characters, prompt under 30,000 characters) are refused before anything is reserved. Before it starts, each call reserves its largest estimated cost, worked out from the actual request at the model's rates (input counted high at one token per 3 characters and 2,000 tokens per photo, plus the whole output limit); the largest a reader call can reserve is under US$0.14. The reservation is a transaction on the shared daily ledger in Firestore, so separate instances (for example two revisions during a rollout) cannot both pass the cap. If the cap has no room, or the ledger cannot be written, the call does not run. A call that fails or times out keeps its reservation as spent, and a reservation left open by a crash stays counted.
 - Never run `SEED=reset` against a real database: it deletes and reseeds.
 
 ## Mock vs real

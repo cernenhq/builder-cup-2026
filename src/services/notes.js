@@ -15,7 +15,7 @@ const AUDIENCES = {
 };
 
 function facts({ project, period, per, decided }) {
-  const lines = decided.map((d) => `- ${d.lineLabel}: claimed ${d.claimedPct}% ; the person decided "${VERDICT_LABEL[d.decision] || d.decision}" (reason: ${d.reason})`);
+  const lines = decided.map((d) => `- ${d.lineLabel}: claimed ${d.claimedPct}% ; the person decided "${VERDICT_LABEL[d.decision] || d.decision}" (reason: ${String(d.reason).slice(0, 300)})`);
   const pct = per.percentComplete ? `${per.percentComplete.value}%` : 'not entered yet';
   return `Project: ${project.name} (fictional demo project).
 Reporting period: ${monthLabel(period)}.
@@ -53,11 +53,14 @@ async function draftNote({ store, rootStore, live, spend, judge, config, project
   if (hit) return { text: hit.text, model: hit.model, at: hit.at, saved: true, audience };
   if (!live) throw Object.assign(new Error('Live AI is off in this deployment, and no saved draft matches these decisions.'), { status: 403, needsCode: false });
   if (!judge) throw Object.assign(new Error('Live Gemini actions need the judge access code (enter it on the sign-in page).'), { status: 403, needsCode: true });
-  const ticket = spend ? await spend.reserve('note') : { amount: 0 };
+  const prompt = promptFor(audience, f);
+  const est = live.estimateWrite ? live.estimateWrite(prompt) : { ok: true, maxUsd: 0.02 };
+  if (!est.ok) throw Object.assign(new Error(est.error), { status: 400 });
+  const ticket = spend ? await spend.reserve('note', est.maxUsd) : { amount: 0 };
   if (!ticket) throw Object.assign(new Error("Today's live AI budget for the demo is used up. Saved runs still work; please try again tomorrow."), { status: 429 });
   let r;
   try {
-    r = await live.write(promptFor(audience, f));
+    r = await live.write(prompt);
   } finally {
     if (spend) await spend.settle(ticket, r && r.usd);
   }

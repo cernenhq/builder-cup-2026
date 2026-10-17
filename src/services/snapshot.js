@@ -8,7 +8,8 @@ function effectiveDecisions(decisions, periods) {
   // Latest decision per period and line wins. Earlier ones stay in the log.
   // With periods given, only decisions made on the period's CURRENT check run count: a new run (new photos,
   // new claims) is unreviewed until a person decides again, so old decisions never vouch for new content.
-  const runOf = periods ? new Map(periods.filter((p) => p.check).map((p) => [p.period, p.check.runId])) : null;
+  // A stale check (photos or claims changed since it ran) has no current decisions at all.
+  const runOf = periods ? new Map(periods.filter((p) => p.check).map((p) => [p.period, p.checkStale ? null : p.check.runId])) : null;
   const sorted = [...decisions]
     .filter((d) => d.kind === 'line' && (!runOf || !runOf.has(d.period) || d.checkRunId === runOf.get(d.period)))
     .sort((a, b) => (a.at === b.at ? (a.seq || 0) - (b.seq || 0) : a.at.localeCompare(b.at)));

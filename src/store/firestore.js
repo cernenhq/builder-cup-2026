@@ -72,6 +72,16 @@ function createFirestoreStore({ projectId, databaseId, prefix = '', ttlHours = 2
     };
   }
   const root = make((name) => db.collection(prefix + name), { expiring: false });
+  // Read-modify-write of one shared document in a Firestore transaction, so separate instances (for
+  // example two revisions during a rollout) cannot overwrite each other. fn(current or null) -> { doc, result }.
+  root.transact = (name, id, fn) =>
+    db.runTransaction(async (t) => {
+      const ref = db.collection(prefix + name).doc(id);
+      const snap = await t.get(ref);
+      const out = await fn(snap.exists ? { ...snap.data(), id } : null);
+      if (out && out.doc) t.set(ref, { ...out.doc, id });
+      return out ? out.result : undefined;
+    });
   root.scope = (ws, opts = {}) => make((name) => db.collection(`${prefix}ws`).doc(ws).collection(name), { expiring: !['template', 'main'].includes(ws), expiresAt: opts.expiresAt });
   return root;
 }

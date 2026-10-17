@@ -164,7 +164,7 @@
     }
     return `<div class="card section" data-testid="check-card"><h2><span class="step">3</span>Check the claim against the photos</h2>
       <p class="small">Each line becomes one question a photo can answer. Rule checks run first (dates, location, reuse, whether two months' views compare), then two independent readers answer each question. A person then decides every line: the engineer in charge, or the office head.</p>
-      <div class="row"><button class="primary" id="runCheck" ${dis} data-testid="run-check">Run the check</button><span class="msg" id="checkMsg"></span></div>${body}</div>`;
+      <div class="row"><button class="primary" id="runCheck" ${dis} data-testid="run-check">Run the check</button><span class="msg" id="checkMsg"></span></div>${S.per.checkStale ? `<p class="banner-note" data-testid="check-stale"><b>This check is out of date.</b> ${esc(S.per.checkStaleReason || 'The photos or claims changed after it ran.')} Run the check again; until then its lines count as undecided.</p>` : ''}${body}</div>`;
   }
 
   function readerBox(name, r, mock, waiting) {

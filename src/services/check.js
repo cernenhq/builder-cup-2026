@@ -123,7 +123,7 @@ async function runCheck({ store, photoStore, readers, project, period, user }) {
     photoChecks,
     lines
   };
-  await store.update('periods', per.id, { check, status: 'checked' });
+  await store.update('periods', per.id, { check, status: 'checked', checkStale: false, checkStaleReason: null });
   return check;
 }
 

@@ -9,7 +9,7 @@ function correctionsText(corrections) {
     '\nReviewer corrections from earlier periods on this project (guidance about where readers were wrong):\n' +
     corrections
       .slice(-12)
-      .map((c) => `- ${c.lineLabel}: the readers said ${LABEL[c.ai] || c.ai}, the reviewer decided ${LABEL[c.decision] || c.decision}${c.reason ? ` (${c.reason})` : ''}`)
+      .map((c) => `- ${c.lineLabel}: the readers said ${LABEL[c.ai] || c.ai}, the reviewer decided ${LABEL[c.decision] || c.decision}${c.reason ? ` (${String(c.reason).slice(0, 200)})` : ''}`)
       .join('\n')
   );
 }

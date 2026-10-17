@@ -1,0 +1,59 @@
+(async function () {
+  const { esc, api, header } = window.PoP;
+  const { meta } = await header({ subtitle: 'Municipal Engineering Office' });
+  const main = document.getElementById('main');
+  const DESC = {
+    engineer: 'Upload milestone photos and the progress claim, run the check, enter percent complete once, log submissions and monitoring work.',
+    reviewer: 'Confirm or override every line with a reason. Monday view of what is lagging and what is due.',
+    mayor: 'Only the items that have been escalated, in plain words.',
+    auditor: 'Read-only decision log and submission log, with who decided and when.'
+  };
+  let users = [];
+  try {
+    users = await api('/api/auth/demo-users');
+  } catch (e) {
+    main.innerHTML = '<div class="card section"><h2>Sign in</h2><p>Demo sign-in is turned off on this deployment.</p></div>';
+    return;
+  }
+  const groups = ['engineer', 'reviewer', 'mayor', 'auditor'];
+  main.innerHTML = `<section class="section"><h1>Sign in for the demo</h1>
+    <p class="small">Pick a person. This demo sign-in stands in for real sign-in (Google sign-in or Identity Platform); the server still checks the role on every request.</p></section>
+    ${groups
+      .map(
+        (g) => `<section class="section"><h2 style="text-transform:capitalize">${esc(g)}</h2><p class="small">${esc(DESC[g])}</p><div class="roles">${users
+          .filter((u) => u.role === g)
+          .map((u) => `<button data-user="${esc(u.id)}"><b>${esc(u.name)}</b><span>${esc(u.title)}${u.agency ? `, ${esc(u.agency)}` : ''}</span></button>`)
+          .join('')}</div></section>`
+      )
+      .join('')}
+    <section class="section grid cols-2">
+      <div class="card"><h2>Contractor</h2><p class="small">Contractors do not sign in. Each project has its own link, which the office sends them. The demo links:</p>
+        <ul>${meta.demoContractorLinks.map((l) => `<li><a href="${esc(l.link)}" data-testid="contractor-link-${esc(l.projectId)}">${esc(l.name)}</a></li>`).join('')}</ul></div>
+      <div class="card"><h2>Public</h2><p class="small">Anyone can read a plain progress note per project.</p><a class="btn" href="/public">Open the public page</a></div>
+    </section>
+    ${meta.access && meta.access.liveAi ? `<section class="section card" data-testid="judge-access">
+      <h2>Judges and organisers</h2>
+      ${meta.access.judge
+        ? '<p class="small" data-testid="judge-on">Judge access is on in this browser: live Gemini runs and drafts are available (within a daily limit).</p>'
+        : `<p class="small">Everything here works without a code: every screen opens on a saved Gemini run. To run Gemini live on new photos or draft a note, enter the access code from the submission form.</p>
+           <form id="judgeForm" class="row"><label>Access code <input id="judgeCode" type="password" autocomplete="off" data-testid="judge-code"></label><button class="btn" type="submit">Turn on live AI</button><span id="judgeMsg" class="small"></span></form>`}
+    </section>` : ''}`;
+  const jf = document.getElementById('judgeForm');
+  if (jf)
+    jf.onsubmit = async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('judgeMsg');
+      try {
+        await api('/api/access', { method: 'POST', body: { code: document.getElementById('judgeCode').value } });
+        location.reload();
+      } catch (err) {
+        msg.textContent = err.message;
+      }
+    };
+  main.querySelectorAll('[data-user]').forEach((b) => {
+    b.onclick = async () => {
+      const r = await api('/api/auth/login', { method: 'POST', body: { userId: b.dataset.user } });
+      location.href = r.home;
+    };
+  });
+})();

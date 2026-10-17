@@ -1,0 +1,8 @@
+node_modules/
+data/
+test-results/
+playwright-report/
+.env
+*.log
+deploy/.env.deploy
+.claude/

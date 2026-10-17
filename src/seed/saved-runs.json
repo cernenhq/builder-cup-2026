@@ -1,0 +1,1344 @@
+{
+ "recordedAt": "2026-10-17T22:16:04.552Z",
+ "model": "gemini-3.8-flash",
+ "aicache": [
+  {
+   "id": "945c256ea2fad5711a54f85c904e24b3ed1baea4",
+   "at": "2026-10-17T22:04:10.032Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q004",
+      "question": "Glazing is installed on part of the curved front facade, with open bays remaining.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Curtain-wall framing and glazing are installed across the lower levels of the curved facade, while the upper levels of the facade remain open concrete bays.",
+      "box_2d": [
+       550,
+       93,
+       856,
+       796
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q005",
+      "question": "A steel frame is erected on the rooftop level.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "A structural steel frame with columns, beams, and an upper roof deck is fully erected on the rooftop level.",
+      "box_2d": [
+       192,
+       105,
+       375,
+       735
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q006",
+      "question": "The rooftop level is partly enclosed, with some open sides remaining.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The rooftop level is completely open on all perimeter sides with no exterior walls, infill panels, or cladding installed.",
+      "box_2d": [
+       192,
+       105,
+       375,
+       735
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q007",
+      "question": "A tower crane still stands in front of the building.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "A tower crane remains fully erected and standing directly in front of the building structure.",
+      "box_2d": [
+       0,
+       470,
+       725,
+       545
+      ],
+      "photo_index": 0
+     }
+    ],
+    "ms": 18627
+   }
+  },
+  {
+   "id": "8b449b342a2d32ff09e07a73c926973ded3c8181",
+   "at": "2026-10-17T22:04:40.869Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q004",
+      "question": "Glazing is installed on part of the curved front facade, with open bays remaining.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Curtain-wall glazing and mullions are installed on the lower visible floors of the curved front facade, while the upper floors of the curved structure remain open concrete framing.",
+      "box_2d": [
+       350,
+       88,
+       835,
+       490
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q005",
+      "question": "A steel frame is erected on the rooftop level.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "A structural steel frame consisting of columns, girders, and roof decking is fully erected over the rooftop level.",
+      "box_2d": [
+       187,
+       85,
+       362,
+       736
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q006",
+      "question": "The rooftop level is partly enclosed, with some open sides remaining.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The rooftop steel structure is completely open on all visible sides; no permanent wall enclosures or cladding panels have been installed.",
+      "box_2d": [
+       187,
+       85,
+       362,
+       736
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q007",
+      "question": "A tower crane still stands in front of the building.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "A tower crane remains fully assembled and stands directly in front of the central portion of the building.",
+      "box_2d": [
+       0,
+       128,
+       755,
+       532
+      ],
+      "photo_index": 0
+     }
+    ],
+    "ms": 49458
+   }
+  },
+  {
+   "id": "a0af848d16003d57553ddc753f7425a3958b5bd0",
+   "at": "2026-10-17T22:05:28.458Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q008",
+      "question": "Glazing is installed on part of the curved front facade, with open bays remaining.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Curtain-wall panels are installed on sections of the curved front facade, while intermediate bays remain open framing.",
+      "box_2d": [
+       305,
+       85,
+       875,
+       490
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q009",
+      "question": "The right-hand wing is partly glazed, with open bays remaining.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Horizontal bands of curtain-wall panels are installed on the right-hand wing, while other bays remain open.",
+      "box_2d": [
+       305,
+       490,
+       695,
+       805
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q010",
+      "question": "A tower crane still stands in front of the building.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "The tower crane mast stands erected directly in front of the building facade.",
+      "box_2d": [
+       0,
+       468,
+       740,
+       535
+      ],
+      "photo_index": 0
+     }
+    ],
+    "ms": 47565
+   }
+  },
+  {
+   "id": "f18d1c20f9210a271a91d3d66913b34dfc98c7bc",
+   "at": "2026-10-17T22:06:00.815Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q008",
+      "question": "Glazing is installed on part of the curved front facade, with open bays remaining.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "The curved front facade shows curtain-wall cladding and glazing installed on the upper band, while intermediate levels remain open framed bays, confirming partial installation.",
+      "box_2d": [
+       310,
+       88,
+       855,
+       485
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q009",
+      "question": "The right-hand wing is partly glazed, with open bays remaining.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "The right-hand wing facade displays installed curtain-wall spandrel and glazing bands on the upper floor, while intermediate floors feature open framing and unglazed bays.",
+      "box_2d": [
+       315,
+       485,
+       710,
+       800
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q010",
+      "question": "A tower crane still stands in front of the building.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "The yellow tower crane mast remains erected directly in front of the building facade, confirming that demobilisation has not occurred.",
+      "box_2d": [
+       0,
+       470,
+       735,
+       535
+      ],
+      "photo_index": 0
+     }
+    ],
+    "ms": 79925
+   }
+  },
+  {
+   "id": "2ad4d7a7e38c89d4f3d913e8a32da1ad1ee5766b",
+   "at": "2026-10-17T22:06:13.255Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q014",
+      "question": "Is glazing installed on part of the curved front facade, with open bays remaining?",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Glazing panels are installed along sections of the curved front facade, while multiple framing bays remain open and covered with safety netting.",
+      "box_2d": [
+       343,
+       82,
+       810,
+       496
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q015",
+      "question": "Is the right-hand wing facade fully glazed?",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Curtain-wall glazing is completely installed across all visible bays of the right-hand wing facade.",
+      "box_2d": [
+       326,
+       523,
+       713,
+       807
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q016",
+      "question": "Are masonry block walls visible on the rooftop level?",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Masonry block partition walls are visibly constructed between structural columns on the top/roof level.",
+      "box_2d": [
+       223,
+       180,
+       385,
+       722
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q017",
+      "question": "Is the tower crane in front of the building completely demobilised?",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "A tower crane mast remains erected directly in front of the building facade.",
+      "box_2d": [
+       0,
+       467,
+       735,
+       532
+      ],
+      "photo_index": 0
+     }
+    ],
+    "ms": 12423
+   }
+  },
+  {
+   "id": "67a8a63e415e79fef4c328ec8768a3f5b5671847",
+   "at": "2026-10-17T22:07:19.386Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q014",
+      "question": "Glazing is installed on part of the curved front facade, with open bays remaining.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The curved front facade remains unglazed, with open structural bays, safety netting, and external scaffolding visible rather than curtain-wall glazing.",
+      "box_2d": [
+       350,
+       85,
+       800,
+       480
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q015",
+      "question": "The right-hand wing facade is fully glazed.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "The right-hand wing facade is fully enclosed with curtain-wall glass panels across all visible standard floors.",
+      "box_2d": [
+       320,
+       520,
+       690,
+       808
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q016",
+      "question": "Some masonry block walls are visible on the rooftop level.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Concrete masonry block partition walls are clearly visible erected between columns on the rooftop level.",
+      "box_2d": [
+       225,
+       250,
+       385,
+       715
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q017",
+      "question": "No tower crane stands in front of the building.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "A tower crane lattice mast stands directly in front of the building.",
+      "box_2d": [
+       0,
+       470,
+       746,
+       532
+      ],
+      "photo_index": 0
+     }
+    ],
+    "ms": 78551
+   }
+  },
+  {
+   "id": "7e2cec1e82fa955e5e8410700f8d6ad8c39476ec",
+   "at": "2026-10-17T22:09:36.790Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q028",
+      "question": "Glazing is installed across the visible curved front facade, with no open bays.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Curtain-wall glazing panels are installed across all visible floors along the curved front facade, with no open bays visible.",
+      "box_2d": [
+       318,
+       118,
+       825,
+       807
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q029",
+      "question": "The rooftop level is partly enclosed, with some open sides remaining.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "The rooftop level shows partial enclosure with masonry block walls erected within parts of the white structural frame, while several bays remain open.",
+      "box_2d": [
+       183,
+       116,
+       402,
+       793
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q030",
+      "question": "No tower crane stands in front of the building.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "No tower crane is present in front of or directly adjacent to the building.",
+      "box_2d": [
+       183,
+       114,
+       856,
+       810
+      ],
+      "photo_index": 0
+     }
+    ],
+    "ms": 47363
+   }
+  },
+  {
+   "id": "54037789a525492f82e802811b9ac0a82cca4ad5",
+   "at": "2026-10-17T22:10:09.867Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q028",
+      "question": "Glazing is installed across the visible curved front facade, with no open bays.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Curtain-wall glazing panels are installed across all visible levels of the curved front facade, with no open or missing bays visible.",
+      "box_2d": [
+       320,
+       135,
+       808,
+       804
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q029",
+      "question": "The rooftop level is partly enclosed, with some open sides remaining.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "The rooftop level shows partial enclosure with masonry block walls erected in portions of the structure while the perimeter steel framing remains open on the front and side bays.",
+      "box_2d": [
+       195,
+       118,
+       405,
+       788
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q030",
+      "question": "No tower crane stands in front of the building.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "There is no tower crane standing in front of or directly adjoining the building.",
+      "box_2d": [
+       175,
+       115,
+       810,
+       805
+      ],
+      "photo_index": 0
+     }
+    ],
+    "ms": 80443
+   }
+  },
+  {
+   "id": "b4b83055763a2935bedaf4e5b866777787cc5994",
+   "at": "2026-10-17T22:10:25.211Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q035",
+      "question": "The right-hand wing facade is fully glazed.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "The curtain-wall glazing panels on the upper floors of the curved corner and right-hand wing are fully installed across all visible levels.",
+      "box_2d": [
+       318,
+       142,
+       810,
+       803
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q036",
+      "question": "The rooftop level is partly enclosed, with some open sides remaining.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "The rooftop perimeter frame is visible with partial masonry and sheeting enclosure, while the outer structural steel frame remains mostly open on several sides.",
+      "box_2d": [
+       206,
+       81,
+       410,
+       802
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q037",
+      "question": "Entrance canopy work is visible at street level, but the canopy is not finished.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The ground level and street entrance areas are blurred and obscured from view, making entrance canopy work impossible to verify."
+     }
+    ],
+    "ms": 15323
+   }
+  },
+  {
+   "id": "d7be0e2110990492209f5f7cafbb67d593fc04de",
+   "at": "2026-10-17T22:10:51.127Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q035",
+      "question": "The right-hand wing facade is fully glazed.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "All visible bays across the curtain-wall facade of the right-hand wing have glazing panels installed, with no missing glass lites observed.",
+      "box_2d": [
+       314,
+       370,
+       775,
+       805
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q036",
+      "question": "The rooftop level is partly enclosed, with some open sides remaining.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "The rooftop level contains an enclosed central core of block walls and sheeting, while the perimeter structural steel framing remains unenclosed and open.",
+      "box_2d": [
+       195,
+       85,
+       395,
+       790
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q037",
+      "question": "Entrance canopy work is visible at street level, but the canopy is not finished.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The ground and street level where a main entrance canopy would be located is obscured by blur, glare, and out-of-frame areas."
+     }
+    ],
+    "ms": 41242
+   }
+  },
+  {
+   "id": "32996f3ce568e8d1f0014591769b5b86013134d5",
+   "at": "2026-10-17T22:11:31.201Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q041",
+      "question": "Temporary weather protection (tarps) covers the rooftop.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The rooftop structure and floor slab are open and exposed, with snow accumulating directly on the surfaces without weather protection tarps covering the rooftop.",
+      "box_2d": [
+       183,
+       105,
+       396,
+       790
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q042",
+      "question": "The rooftop level is partly enclosed, with some open sides remaining.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The line item claims a specific completion percentage (90%), which cannot be confirmed or measured from visual inspection alone."
+     },
+     {
+      "claim_id": "Q043",
+      "question": "Entrance canopy work is visible at street level, but the canopy is not finished.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The claim specifies a percentage of completion (30%), and the street-level entrance area is heavily blurred and obscured from view."
+     }
+    ],
+    "ms": 40058
+   }
+  },
+  {
+   "id": "574eaa9a76af15b2a715381e0c5fac0dce1afaea",
+   "at": "2026-10-17T22:11:55.342Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q041",
+      "question": "Temporary weather protection (tarps) covers the rooftop.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The rooftop and upper structure are open to the elements with accumulated snow directly on the surfaces, and there are no tarps or weather protection covering the rooftop.",
+      "box_2d": [
+       181,
+       107,
+       394,
+       804
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q042",
+      "question": "The rooftop level is partly enclosed, with some open sides remaining.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "The rooftop level shows partial enclosure with structural framing and some masonry walls, while the perimeter sides remain open without cladding or glazing.",
+      "box_2d": [
+       212,
+       85,
+       399,
+       804
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q043",
+      "question": "Entrance canopy work is visible at street level, but the canopy is not finished.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The street level and entrance area at the base of the building are blurred out and not visible in the photo."
+     }
+    ],
+    "ms": 64197
+   }
+  },
+  {
+   "id": "424c5210ff91679af6ebafa03ab8078452a486b7",
+   "at": "2026-10-17T22:12:03.513Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q051",
+      "question": "The rooftop level is fully enclosed, with no open sides visible.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The rooftop perimeter frame has open bays and exposed structural steel columns without full exterior walls or cladding enclosing the perimeter.",
+      "box_2d": [
+       198,
+       86,
+       396,
+       783
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q052",
+      "question": "A steel frame is erected on the rooftop level.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "A completed structural steel frame with posts, beams, and diagonal bracing is clearly erected across the rooftop level.",
+      "box_2d": [
+       194,
+       84,
+       395,
+       783
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q053",
+      "question": "Entrance canopy work is visible at street level, but the canopy is not finished.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The street level and base of the building are heavily blurred, preventing visual assessment of any entrance canopy."
+     }
+    ],
+    "ms": 8153
+   }
+  },
+  {
+   "id": "cef962320f8f4c5602455670f72d1f2f8f0949fd",
+   "at": "2026-10-17T22:12:04.158Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q051",
+      "question": "The rooftop level is fully enclosed, with no open sides visible.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The outer perimeter of the rooftop level is not fully enclosed; structural steel columns and open gaps are visible along the perimeter.",
+      "box_2d": [
+       182,
+       85,
+       395,
+       785
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q052",
+      "question": "A steel frame is erected on the rooftop level.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "A complete steel framework with columns and beams is erected across the rooftop level.",
+      "box_2d": [
+       183,
+       87,
+       394,
+       784
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q053",
+      "question": "Entrance canopy work is visible at street level, but the canopy is not finished.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Street level and any entrance canopy area are obscured by blurring in the lower foreground."
+     }
+    ],
+    "ms": 8797
+   }
+  },
+  {
+   "id": "17864ff2db8c381dd10bdec5bd056e19c16b19bd",
+   "at": "2026-10-17T22:12:10.275Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q054",
+      "question": "Is a mobile crane working at the front of the building?",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "A yellow mobile crane boom is positioned at the front of the glass facade, hoisting a load toward the upper levels.",
+      "box_2d": [
+       152,
+       499,
+       749,
+       574
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q055",
+      "question": "Is entrance canopy work visible at street level, but unfinished?",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The entire street/ground level is heavily blurred and obscured from view.",
+      "box_2d": [
+       621,
+       137,
+       989,
+       995
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q056",
+      "question": "Is the rooftop level fully enclosed, with no open sides visible?",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The perimeter of the top/rooftop level consists of open structural framing with large exposed gaps and unclad sections.",
+      "box_2d": [
+       193,
+       85,
+       394,
+       768
+      ],
+      "photo_index": 0
+     }
+    ],
+    "ms": 6100
+   }
+  },
+  {
+   "id": "fba9b56f67bc027a27191e2c718ae9af98dff10b",
+   "at": "2026-10-17T22:12:11.198Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q054",
+      "question": "A mobile crane is working at the front of the building.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "A yellow mobile crane boom is positioned at the front of the building, hoisting materials up along the glazed facade.",
+      "box_2d": [
+       146,
+       497,
+       747,
+       574
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q055",
+      "question": "Entrance canopy work is visible at street level, but the canopy is not finished.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The lower ground and street level at the base of the building are obscured by blurring, so any entrance canopy is not visible."
+     },
+     {
+      "claim_id": "Q056",
+      "question": "The rooftop level is fully enclosed, with no open sides visible.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The upper level beneath the roof slab consists of an open steel framework with visible open gaps and incomplete exterior walls rather than being 100% enclosed.",
+      "box_2d": [
+       183,
+       90,
+       398,
+       786
+      ],
+      "photo_index": 0
+     }
+    ],
+    "ms": 7022
+   }
+  },
+  {
+   "id": "a65b42053f30b5a9956d1090b53d52e0e59c5c4b",
+   "at": "2026-10-17T22:12:17.783Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q064",
+      "question": "A finished entrance canopy is visible at street level.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Street level and any ground-floor canopy are obscured by blurring at the bottom of the image."
+     },
+     {
+      "claim_id": "Q065",
+      "question": "The rooftop level is fully enclosed, with no open sides visible.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The rooftop addition has multiple open bays with exposed structural columns and unfinished wall sections visible rather than being fully enclosed.",
+      "box_2d": [
+       183,
+       85,
+       395,
+       755
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q066",
+      "question": "Part of the street hoarding is green with white circular logos.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Street-level hoarding is obscured by heavy blurring across the lower portion of the photo."
+     },
+     {
+      "claim_id": "Q067",
+      "question": "Roof waterproofing is at the reported stage (100%).",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Waterproofing status and completeness cannot be determined from external camera imagery."
+     }
+    ],
+    "ms": 6568
+   }
+  },
+  {
+   "id": "c209fd459581f0f54c4a1ac4a0f01b434075f9f3",
+   "at": "2026-10-17T22:12:18.663Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q064",
+      "question": "A finished entrance canopy is visible at street level.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The street level and building base are blurred out and not visible in the frame."
+     },
+     {
+      "claim_id": "Q065",
+      "question": "The rooftop level is fully enclosed, with no open sides visible.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The rooftop level remains substantially unenclosed, with exposed structural framing, incomplete blockwork, and open spans along the front and side elevations.",
+      "box_2d": [
+       197,
+       85,
+       395,
+       747
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q066",
+      "question": "Part of the street hoarding is green with white circular logos.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The street-level perimeter and hoarding are obscured by digital blurring and cannot be inspected."
+     },
+     {
+      "claim_id": "Q067",
+      "question": "Roof waterproofing is at the reported stage (100%).",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Waterproofing and roofing membranes cannot be definitively verified or quantified from this distance and angle, and represent technical/hidden work."
+     }
+    ],
+    "ms": 7449
+   }
+  },
+  {
+   "id": "bade490b0f2c6e3c2bd679c9c076de0ae80cb277",
+   "at": "2026-10-17T22:12:27.052Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q071",
+      "question": "The street hoarding is green with white circular logos.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The foreground at street level is heavily blurred, preventing visual verification of the hoarding or any logos."
+     },
+     {
+      "claim_id": "Q072",
+      "question": "Masonry block walls are visible on the rooftop level.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Light-colored masonry block walls are clearly visible installed on the rooftop floor level beneath the steel canopy frame.",
+      "box_2d": [
+       265,
+       126,
+       386,
+       480
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q073",
+      "question": "Interior fit-out of floors 2 to 4 is at the reported stage (90%).",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Interior fit-out completion percentages cannot be assessed through exterior site photography."
+     }
+    ],
+    "ms": 8355
+   }
+  },
+  {
+   "id": "dbc7fc5194ffb64bc8ae732b4de420bb6ff4e0d7",
+   "at": "2026-10-17T22:14:19.124Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "fd",
+      "question": "Are the footings and foundation visible to assess progress?",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Footings and foundations are buried underground and cannot be seen in the exterior site photo."
+     },
+     {
+      "claim_id": "cb",
+      "question": "Is work on columns and beams visible but not finished?",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Steel framing columns and beams are visible erected on the upper structure, partially framed and ongoing.",
+      "box_2d": [
+       180,
+       204,
+       395,
+       918
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "sl",
+      "question": "Is the second-floor slab visible but not finished?",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The lower floors are enclosed behind an exterior curtain wall, making the interior second-floor slab not assessable from this photo."
+     },
+     {
+      "claim_id": "chb",
+      "question": "Is work on hollow-block walls visible but not finished?",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Concrete hollow-block masonry walls are partially laid between the steel columns on the upper level.",
+      "box_2d": [
+       267,
+       545,
+       381,
+       796
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "rf",
+      "question": "Is there no visible work on roofing yet?",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "Roofing framing and deck covering are already visible on top of the framework, contradicting the claim of 0% progress.",
+      "box_2d": [
+       172,
+       219,
+       271,
+       914
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "el",
+      "question": "Is electrical rough-in visible in the photo?",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Electrical rough-in is interior work that cannot be evaluated from this exterior site photograph."
+     },
+     {
+      "claim_id": "pl",
+      "question": "Is plumbing rough-in visible in the photo?",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Plumbing rough-in is hidden interior work that cannot be evaluated from this exterior site photograph."
+     }
+    ],
+    "ms": 30730
+   }
+  },
+  {
+   "id": "9672ddf8affceabf428aee01e14e6c132d536fd2",
+   "at": "2026-10-17T22:14:39.577Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "fd",
+      "question": "Is footings and foundation work visible in the photo?",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Footings and foundations are buried underground beneath the structure and are hidden from view."
+     },
+     {
+      "claim_id": "cb",
+      "question": "Is work on columns and beams visible but not finished?",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Steel structural columns and beams forming the superstructure frame are visible and erected, with work ongoing around the frame.",
+      "box_2d": [
+       183,
+       203,
+       396,
+       912
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "sl",
+      "question": "Is work on the second-floor slab visible but not finished?",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The lower floors of the building are fully enclosed behind the exterior curtain wall facade, so the second-floor slab is hidden inside the building and cannot be assessed.",
+      "photo_index": 0
+     },
+     {
+      "claim_id": "chb",
+      "question": "Is work on hollow-block walls visible but not finished?",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Concrete hollow-block masonry walls and pillars are visible partially erected within the structural framing.",
+      "box_2d": [
+       263,
+       555,
+       375,
+       805
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "rf",
+      "question": "Is it true that no work on roofing is visible yet?",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "Roofing framing, roof deck, and roofing materials are plainly visible on top of the structure, contradicting the claim that 0% work has commenced.",
+      "box_2d": [
+       178,
+       218,
+       273,
+       915
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "el",
+      "question": "Is electrical rough-in work visible in the photo?",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Electrical rough-in is concealed interior work inside the building and cannot be assessed from an exterior view."
+     },
+     {
+      "claim_id": "pl",
+      "question": "Is plumbing rough-in work visible in the photo?",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Plumbing rough-in is concealed interior work inside the building and cannot be assessed from an exterior view."
+     }
+    ],
+    "ms": 51182
+   }
+  },
+  {
+   "id": "0d66b8146572155e1c25cde098d0678398f4c4f5",
+   "at": "2026-10-17T22:15:55.398Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q018",
+      "question": "Glazing is installed across the visible curved front facade, with no open bays.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The top level of the curved front facade contains completely open bays with framing exposed and no glass installed.",
+      "box_2d": [
+       382,
+       94,
+       507,
+       504
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q019",
+      "question": "The right-hand wing facade is fully glazed.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Curtain-wall glazing is visible across all main levels of the right-hand wing facade.",
+      "box_2d": [
+       320,
+       517,
+       689,
+       808
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q020",
+      "question": "The rooftop level is partly enclosed, with some open sides remaining.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "The rooftop structure has partial masonry block walls and structural framing, leaving multiple sides unenclosed.",
+      "box_2d": [
+       211,
+       88,
+       394,
+       735
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q021",
+      "question": "No tower crane stands in front of the building.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "A tower crane mast is visibly standing directly in front of the building facade.",
+      "box_2d": [
+       0,
+       471,
+       725,
+       532
+      ],
+      "photo_index": 0
+     }
+    ],
+    "ms": 12548
+   }
+  },
+  {
+   "id": "be0b324e6d5ba7c503f422a2e3009c8395830809",
+   "at": "2026-10-17T22:15:57.473Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q018",
+      "question": "Glazing is installed across the visible curved front facade, with no open bays.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "The upper floor of the curved front facade consists of open structural framing and unglazed bays without curtain-wall glass.",
+      "box_2d": [
+       386,
+       185,
+       501,
+       506
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q019",
+      "question": "The right-hand wing facade is fully glazed.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Curtain-wall glazing panels are installed across all visible levels of the right-hand wing facade.",
+      "box_2d": [
+       323,
+       526,
+       706,
+       804
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q020",
+      "question": "The rooftop level is partly enclosed, with some open sides remaining.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Exact percentages of enclosure or progress cannot be determined or verified from photographic inspection alone.",
+      "box_2d": [
+       183,
+       89,
+       401,
+       746
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q021",
+      "question": "No tower crane stands in front of the building.",
+      "verdict": "contradicted",
+      "confidence": "high",
+      "reason": "A yellow lattice tower crane is standing directly in front of the building.",
+      "box_2d": [
+       0,
+       472,
+       737,
+       532
+      ],
+      "photo_index": 0
+     }
+    ],
+    "ms": 14618
+   }
+  },
+  {
+   "id": "0efab3ca4b21bb65de12720a526dbf1af20445b0",
+   "at": "2026-10-17T22:16:04.542Z",
+   "result": {
+    "model": "gemini-3.8-flash",
+    "ok": true,
+    "findings": [
+     {
+      "claim_id": "Q071",
+      "question": "The street hoarding is green with white circular logos.",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "The foreground area where street hoarding might be located is blurred out and obscured, making it impossible to assess."
+     },
+     {
+      "claim_id": "Q072",
+      "question": "Masonry block walls are visible on the rooftop level.",
+      "verdict": "supported",
+      "confidence": "high",
+      "reason": "Light-colored masonry block walls and partitions are plainly visible being built under the roof structure of the building.",
+      "box_2d": [
+       257,
+       107,
+       391,
+       483
+      ],
+      "photo_index": 0
+     },
+     {
+      "claim_id": "Q073",
+      "question": "Interior fit-out of floors 2 to 4 is at the reported stage (90%).",
+      "verdict": "not_assessable",
+      "confidence": "high",
+      "reason": "Interior fit-out and specific completion percentages cannot be verified from external exterior views through tinted and reflective glazing."
+     }
+    ],
+    "ms": 7022
+   }
+  }
+ ],
+ "notecache": [
+  {
+   "id": "90b09eecf8303b2cd8bac93bca24e6962513c152",
+   "text": "For the Multi-purpose building (demo) in the April 2026 reporting period, the percent complete entered by the office is 68%. \n\nThe photos contradict the claimed 100% for the main entrance canopy, as the canopy fascia is still bare framework in the April frame. The frames also contradict the rooftop level enclosure walls and cladding claimed at 100%, and the street hoarding replacement claimed at 50%. The camera cannot see the roof waterproofing claimed at 100% because hidden work is never visible, so the photos cannot tell its progress. \n\nA site visit is needed to follow up and check the work directly. This note decides nothing about payment.",
+   "model": "gemini-3.8-flash",
+   "at": "2026-10-17T22:14:50.460Z",
+   "audience": "office"
+  },
+  {
+   "id": "f4b23ae768301717fce4e33b739fa68e6eb2654f",
+   "text": "For the April 2026 reporting period, the office entered 68 percent complete for the multi-purpose building (demo) project. Photos contradict claims for the main entrance canopy, rooftop level enclosure, and street hoarding replacement, showing the canopy fascia is still bare framework. The camera cannot see the roof waterproofing because it is hidden work. This note only reports what the photos show and decides nothing about payment.",
+   "model": "gemini-3.8-flash",
+   "at": "2026-10-17T22:14:58.349Z",
+   "audience": "mayor"
+  },
+  {
+   "id": "bf70c5fd83a0de7edcb4e59dce7664a2424c4670",
+   "text": "This progress note covers the Multi-purpose building (demo) for April 2026, with 68% complete entered by the office. \n\nIn the April photos, the main entrance canopy fascia is still bare framework. The rooftop level enclosure walls and cladding, along with the street hoarding replacement, are visible in the frame. Roof waterproofing is hidden work that cannot be seen from the camera. \n\nPlease note that what the camera cannot see can only be reported as unable to be shown, and no visible change does not mean no work was done. This note decides nothing about payment.",
+   "model": "gemini-3.8-flash",
+   "at": "2026-10-17T22:15:09.729Z",
+   "audience": "public"
+  }
+ ]
+}

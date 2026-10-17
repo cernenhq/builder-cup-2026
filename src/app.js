@@ -17,6 +17,7 @@ const { PROJECTS: DEMO_PROJECTS } = require('./seed/demo-data');
 const { als, TEMPLATE, MAIN } = require('./workspace');
 const { createWorkspaces } = require('./services/workspaces');
 const { draftNote } = require('./services/notes');
+const { createPhotoQuota } = require('./services/quota');
 const { manilaDate } = require('./clock');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -49,23 +50,9 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     res.on('close', release);
     next();
   };
-  // One photo limit for every route that stores photos, counting the files in this request. Uploads into
-  // the same copy run one at a time, so two requests cannot both pass the count.
-  const copyLocks = new Map();
-  function inCopyLock(fn) {
-    const k = (als.getStore() || {}).ws || MAIN;
-    const run = (copyLocks.get(k) || Promise.resolve()).then(fn, fn);
-    const tail = run.catch(() => {});
-    copyLocks.set(k, tail);
-    tail.then(() => {
-      if (copyLocks.get(k) === tail) copyLocks.delete(k);
-    });
-    return run;
-  }
-  async function photoRoomFor(incoming) {
-    if (!config.workspaces || !incoming) return true;
-    return (await store.find('photos', {})).length + incoming <= MAX_PHOTOS_PER_COPY;
-  }
+  const quota = createPhotoQuota({ store, enabled: config.workspaces, max: MAX_PHOTOS_PER_COPY });
+  const reservePhotoSlots = (n) => quota.reserve(n);
+  const releasePhotoSlots = (n) => quota.release(n);
   const photoLimitMsg = `A visitor copy of the demo holds at most ${MAX_PHOTOS_PER_COPY} photos.`;
   const today = () => clock.today();
   const isSecure = (req) => req.secure || config.production;
@@ -322,21 +309,16 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     if (!p || !requireWrite(req, res, p)) return;
     const stamps = [].concat((req.body && req.body.stampText) || []);
     const out = [];
-    let full = false;
+    const n = (req.files || []).length;
+    if (!(await reservePhotoSlots(n))) return res.status(403).json({ error: photoLimitMsg });
     try {
-      await inCopyLock(async () => {
-        if (!(await photoRoomFor((req.files || []).length))) {
-          full = true;
-          return;
-        }
-        for (const [i, f] of (req.files || []).entries()) {
-          out.push(photoMeta(await A.addPhoto({ store, photoStore, project: p, period: req.params.period, buffer: f.buffer, fileName: f.originalname, contentType: f.mimetype, user: req.user, source: 'office', stampText: stamps[i] || stamps[0] || '' })));
-        }
-      });
+      for (const [i, f] of (req.files || []).entries()) {
+        out.push(photoMeta(await A.addPhoto({ store, photoStore, project: p, period: req.params.period, buffer: f.buffer, fileName: f.originalname, contentType: f.mimetype, user: req.user, source: 'office', stampText: stamps[i] || stamps[0] || '' })));
+      }
     } catch (e) {
+      await releasePhotoSlots(n - out.length);
       return sendErr(res, e);
     }
-    if (full) return res.status(403).json({ error: photoLimitMsg });
     if (!out.length) return res.status(400).json({ error: 'Choose at least one photo.' });
     res.json({ photos: out });
   }));
@@ -421,14 +403,14 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   app.post('/api/projects/:id/transmittals', allow('engineer', 'reviewer'), uploadGate, upload.single('photo'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p || !requireWrite(req, res, p)) return;
+    const n = req.file ? 1 : 0;
+    if (!(await reservePhotoSlots(n))) return res.status(403).json({ error: photoLimitMsg });
     try {
-      const t = await inCopyLock(async () => {
-        if (!(await photoRoomFor(req.file ? 1 : 0))) return null;
-        return A.logTransmittal({ store, photoStore, project: p, input: req.body || {}, user: req.user, photo: req.file || null, today: today() });
-      });
-      if (!t) return res.status(403).json({ error: photoLimitMsg });
+      const t = await A.logTransmittal({ store, photoStore, project: p, input: req.body || {}, user: req.user, photo: req.file || null, today: today() });
+      if (n && !t.photoId) await releasePhotoSlots(n);
       res.json({ transmittal: t });
     } catch (e) {
+      await releasePhotoSlots(n);
       sendErr(res, e);
     }
   }));
@@ -666,14 +648,14 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     }
     const p = await projectByToken(req, res);
     if (!p) return;
+    const n = (req.files || []).length;
+    if (!(await reservePhotoSlots(n))) return res.status(403).json({ error: photoLimitMsg });
     try {
-      const s = await inCopyLock(async () => {
-        if (!(await photoRoomFor((req.files || []).length))) return null;
-        return A.contractorSubmit({ store, photoStore, project: p, period, claims, files: req.files || [], note: (req.body || {}).note });
-      });
-      if (!s) return res.status(403).json({ error: photoLimitMsg });
+      const s = await A.contractorSubmit({ store, photoStore, project: p, period, claims, files: req.files || [], note: (req.body || {}).note });
+      if (s.photoIds.length < n) await releasePhotoSlots(n - s.photoIds.length);
       res.json({ received: true, id: s.id, receivedAt: s.receivedAt, lines: s.claims.length, photos: s.photoIds.length, status: 'Received. Waiting for the office to check it.' });
     } catch (e) {
+      await releasePhotoSlots(n);
       sendErr(res, e);
     }
   }));

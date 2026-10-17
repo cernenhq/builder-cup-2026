@@ -33,6 +33,9 @@ function cleanFinding(f) {
 
 async function runCheck({ store, photoStore, readers, project, period, user }) {
   const per = await getOrCreatePeriod(store, project, period);
+  // The input revision this check reads (photos and claims). If it changes before the check is saved,
+  // the result is kept for reference but marked stale.
+  const rev0 = per.inputRev || 0;
   const photos = (await store.find('photos', { projectId: project.id, period })).filter((p) => p.source !== 'transmittal').sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const allPhotos = (await store.find('photos', {})).filter((p) => p.source !== 'transmittal');
   const projects = await store.find('projects', {});
@@ -123,7 +126,14 @@ async function runCheck({ store, photoStore, readers, project, period, user }) {
     photoChecks,
     lines
   };
-  await store.update('periods', per.id, { check, status: 'checked', checkStale: false, checkStaleReason: null });
+  const stale = await store.transact('periods', per.id, (cur) => {
+    const changed = ((cur && cur.inputRev) || 0) !== rev0;
+    return {
+      doc: { ...(cur || per), check, status: 'checked', checkStale: changed, checkStaleReason: changed ? 'The photos or claims changed while the check was running.' : null },
+      result: changed
+    };
+  });
+  check.stale = !!stale;
   return check;
 }
 

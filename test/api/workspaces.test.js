@@ -152,3 +152,19 @@ test('an invalid submission on a valid contractor link creates no copy', async (
   const after = (await S.built.rootStore.find('limits', {})).reduce((n, d) => n + d.workspaces, 0);
   assert.equal(after, before);
 });
+
+test('the photo limit holds when two service instances share one database', async () => {
+  // Two independent app instances over the same store, as during a rollout.
+  const { createMemoryStore } = require('../../src/store/memory');
+  const { createScopedStore } = require('../../src/store');
+  const { als } = require('../../src/workspace');
+  const root = createMemoryStore();
+  const ws = root.scope('wtest');
+  for (let i = 0; i < 59; i++) await ws.set('photos', `p${i}`, { id: `p${i}` });
+  const { createPhotoQuota } = require('../../src/services/quota');
+  const instance = () => createPhotoQuota({ store: createScopedStore(root), enabled: true, max: 60 }).reserve;
+  const a = instance();
+  const b = instance();
+  const res = await als.run({ ws: 'wtest', request: true }, () => Promise.all([a(1), b(1)]));
+  assert.equal(res.filter(Boolean).length, 1);
+});

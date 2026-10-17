@@ -27,11 +27,16 @@ function who(user) {
 let seq = 0;
 const nextSeq = () => ++seq;
 
-// When the photos or the claimed lines of a checked period change, the check no longer describes them:
-// it is marked stale, its decisions stop counting downstream, and a person must run it again.
+// When the photos or the claimed lines of a period change, its input revision goes up (a transaction, so
+// no change is lost). A check that ran on older inputs is marked stale: its decisions stop counting
+// downstream, and a person must run it again (see runCheck, which compares the revision when it finishes).
 async function markCheckStale(store, projectId, period, why) {
-  const per = await store.get('periods', periodId(projectId, period));
-  if (per && per.check && !per.checkStale) await store.update('periods', per.id, { checkStale: true, checkStaleReason: why, checkStaleAt: new Date().toISOString() });
+  await store.transact('periods', periodId(projectId, period), (cur) => {
+    if (!cur) return {};
+    const doc = { ...cur, inputRev: (cur.inputRev || 0) + 1 };
+    if (cur.check) Object.assign(doc, { checkStale: true, checkStaleReason: why, checkStaleAt: new Date().toISOString() });
+    return { doc };
+  });
 }
 
 // Checks a contractor submission without writing anything (so a visitor copy is only created for valid ones).

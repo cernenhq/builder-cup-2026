@@ -7,11 +7,8 @@ const clone = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)
 
 function createMemoryStore() {
   const cols = new Map();
+  const chains = new Map();
   const matches = (doc, where) => Object.entries(where || {}).every(([k, v]) => doc[k] === v);
-  const col = (name) => {
-    if (!cols.has(name)) cols.set(name, new Map());
-    return cols.get(name);
-  };
   function make(prefix) {
     const col = (name) => {
       const k = prefix + name;
@@ -47,25 +44,24 @@ function createMemoryStore() {
       async clear() {
         for (const k of [...cols.keys()]) if (k.startsWith(prefix) && (prefix || !k.includes('/'))) cols.delete(k);
       },
+      // Read-modify-write of one document, one at a time per document (the memory store's transaction).
+      // fn(current or null) returns { doc, result }; doc (when given) is written.
+      transact(name, id, fn) {
+        const k = `${prefix}${name}/${id}`;
+        const run = (chains.get(k) || Promise.resolve()).then(async () => {
+          const cur = col(name).get(id);
+          const out = await fn(cur ? clone(cur) : null);
+          if (out && out.doc) col(name).set(id, clone({ ...out.doc, id }));
+          return out ? out.result : undefined;
+        });
+        chains.set(k, run.catch(() => {}));
+        return run;
+      },
       async close() {}
     };
   }
   const root = make('');
   root.scope = (ws) => make(`${ws}/`);
-  // Read-modify-write of one document, one at a time per document (the memory store's transaction).
-  // fn(current or null) returns { doc, result }; doc (when given) is written.
-  const chains = new Map();
-  root.transact = (name, id, fn) => {
-    const k = `${name}/${id}`;
-    const run = (chains.get(k) || Promise.resolve()).then(async () => {
-      const cur = col(name).get(id);
-      const out = await fn(cur ? clone(cur) : null);
-      if (out && out.doc) col(name).set(id, clone({ ...out.doc, id }));
-      return out ? out.result : undefined;
-    });
-    chains.set(k, run.catch(() => {}));
-    return run;
-  };
   return root;
 }
 

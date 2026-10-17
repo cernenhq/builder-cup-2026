@@ -177,14 +177,44 @@ test('two instances sharing one ledger cannot both pass the cap', async () => {
 });
 
 test('live calls over the size limits are refused before anything is reserved', async () => {
-  const { createGeminiReaders, MAX_TEXT_PER_LINE } = require('../../src/ai/gemini');
+  const { createGeminiReaders, MAX_TEXT_PER_LINE, MAX_PROMPT_BYTES, TOKENS_PER_PHOTO_MAX, SCHEMA_BYTES, MAX_OUTPUT_TOKENS_READER } = require('../../src/ai/gemini');
+  const { maxUsd } = require('../../src/ai/spend');
   const g = createGeminiReaders({ client: { models: { generateContent: async () => ({ text: '{}' }) } }, model: 'gemini-3.8-flash' });
   const long = { ...input, claims: [{ id: 'Q1', statement: 'x'.repeat(MAX_TEXT_PER_LINE + 1), question: 'q' }] };
-  const e = await g.estimateRead('A', long);
-  assert.equal(e.ok, false);
-  const ok = await g.estimateRead('A', input);
-  assert.ok(ok.ok && ok.maxUsd > 0 && ok.maxUsd < 0.14, `maxUsd ${ok.maxUsd}`);
-  // The worst case allowed by the limits stays under the reservation used in the README (US$0.14).
-  const { maxUsd } = require('../../src/ai/spend');
-  assert.ok(maxUsd('gemini-3.8-flash', 30000 / 3 + 4 * 2000, 15000) < 0.14);
+  assert.equal((await g.estimateRead('A', long)).ok, false);
+  // Non-English and hard-to-compress text: the reservation counts UTF-8 bytes, so a line of
+  // three-byte characters reserves at least three tokens per character.
+  const wide = { ...input, claims: [{ id: 'Q1', statement: '\u6f22'.repeat(250), question: '\u{1F9F1}'.repeat(60) }] };
+  const w = await g.estimateRead('A', wide);
+  assert.ok(w.ok, w.error);
+  const minTokens = Buffer.byteLength('\u6f22'.repeat(250)) + Buffer.byteLength('\u{1F9F1}'.repeat(60)) + SCHEMA_BYTES + TOKENS_PER_PHOTO_MAX;
+  assert.ok(w.maxUsd >= maxUsd('gemini-3.8-flash', minTokens, MAX_OUTPUT_TOKENS_READER) - 1e-12);
+  // Twenty lines of wide characters go over the byte limit and are refused, not under-reserved.
+  const many = { ...input, claims: Array.from({ length: 20 }, (_, i) => ({ id: `Q${i}`, statement: '\u6f22'.repeat(290), question: '\u6f22'.repeat(290) })) };
+  assert.equal((await g.estimateRead('A', many)).ok, false);
+  // The largest reservation the limits allow, stated in the README.
+  const worst = maxUsd('gemini-3.8-flash', MAX_PROMPT_BYTES + SCHEMA_BYTES + 4 * TOKENS_PER_PHOTO_MAX, MAX_OUTPUT_TOKENS_READER);
+  assert.ok(worst < 0.17, `worst ${worst}`);
+});
+
+test('a check that finishes after the claims changed stays stale', async () => {
+  const { createMemoryStore: mk } = require('../../src/store/memory');
+  const { runCheck } = require('../../src/services/check');
+  const { setClaims } = require('../../src/services/actions');
+  const ws = mk().scope('main');
+  const project = { id: 'P-9', name: 'Demo (demo)', lines: [{ key: 'ab', label: 'Line AB' }], site: null };
+  await setClaims({ store: ws, project, period: '2026-04', claims: [{ lineKey: 'ab', claimedPct: 50, statement: 'old', question: 'q' }], user: { id: 'u', name: 'U', role: 'engineer' }, source: 'office' });
+  await ws.set('photos', 'ph1', { id: 'ph1', projectId: 'P-9', period: '2026-04', storageKey: 'k', createdAt: '2026-04-01T00:00:00Z', source: 'office', exif: {}, phash: '0', phashMirror: '0' });
+  let release;
+  const gate = new Promise((r) => (release = r));
+  const slowReaders = { mode: 'gemini', async read() { await gate; return { mode: 'gemini', ok: true, findings: [] }; } };
+  const photoStore = { async get() { return { buffer: Buffer.from('x') }; } };
+  const running = runCheck({ store: ws, photoStore, readers: slowReaders, project, period: '2026-04', user: { id: 'u', name: 'U', role: 'engineer' } });
+  await new Promise((r) => setTimeout(r, 10));
+  await setClaims({ store: ws, project, period: '2026-04', claims: [{ lineKey: 'ab', claimedPct: 90, statement: 'NEW', question: 'q' }], user: { id: 'u', name: 'U', role: 'engineer' }, source: 'office' });
+  release();
+  await running;
+  const per = await ws.get('periods', 'P-9__2026-04');
+  assert.equal(per.checkStale, true);
+  assert.match(per.checkStaleReason, /while the check was running/);
 });

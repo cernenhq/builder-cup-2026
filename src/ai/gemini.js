@@ -16,13 +16,17 @@ const MAX_PHOTOS = 4;
 const MAX_LINES = 20;
 const MAX_OUTPUT_TOKENS_READER = 15000;
 const MAX_OUTPUT_TOKENS_NOTE = 2000;
-// Input bounds, checked before anything is reserved or sent. Token counts are estimated high: at most
-// one token per 3 characters of prompt, and 2,000 tokens per photo (photos are shrunk to 1280 px).
-const MAX_TEXT_PER_LINE = 400;
-const MAX_PROMPT_CHARS = 30000;
-const MAX_NOTE_PROMPT_CHARS = 12000;
-const CHARS_PER_TOKEN_LOW = 3;
-const TOKENS_PER_PHOTO_HIGH = 2000;
+// Input bounds, checked before anything is reserved or sent. The input token count is bounded from above:
+// - text: never more tokens than UTF-8 bytes (a tokenizer with byte fallback emits at most one token per
+//   byte), counting the prompt and the response schema;
+// - photos: 2,000 tokens each, above the 1,120 Google documents for Gemini 3 at the default media
+//   resolution, which is what these requests use.
+const MAX_TEXT_PER_LINE = 300;
+const MAX_PROMPT_BYTES = 24000;
+const MAX_NOTE_PROMPT_BYTES = 12000;
+const TOKENS_PER_PHOTO_MAX = 2000;
+const SCHEMA_BYTES = Buffer.byteLength(JSON.stringify(VERDICT_SCHEMA), 'utf8');
+const bytes = (t) => Buffer.byteLength(String(t), 'utf8');
 
 function withTimeout(promise, ms) {
   let t;
@@ -72,9 +76,9 @@ function createGeminiReaders({ apiKey, vertex, model, modelB, client }) {
       return { model: m, error: `Each claimed line and its question must be under ${MAX_TEXT_PER_LINE} characters for a live check.` };
     }
     const text = promptFor(reader, input);
-    if (text.length > MAX_PROMPT_CHARS) return { model: m, error: 'This request is too long for a live check.' };
+    if (bytes(text) > MAX_PROMPT_BYTES) return { model: m, error: 'This request is too long for a live check.' };
     const photos = Math.min(MAX_PHOTOS, input.photos.length);
-    const inputTokens = Math.ceil(text.length / CHARS_PER_TOKEN_LOW) + photos * TOKENS_PER_PHOTO_HIGH;
+    const inputTokens = bytes(text) + SCHEMA_BYTES + photos * TOKENS_PER_PHOTO_MAX;
     return { model: m, text, maxUsd: maxUsd(m, inputTokens, MAX_OUTPUT_TOKENS_READER) };
   }
   async function estimateRead(reader, input) {
@@ -82,8 +86,8 @@ function createGeminiReaders({ apiKey, vertex, model, modelB, client }) {
     return p.error ? { ok: false, model: p.model, error: p.error } : { ok: true, model: p.model, maxUsd: p.maxUsd };
   }
   function estimateWrite(prompt) {
-    if (prompt.length > MAX_NOTE_PROMPT_CHARS) return { ok: false, error: 'This note request is too long.' };
-    return { ok: true, maxUsd: maxUsd(resolved || model || 'unknown', Math.ceil(prompt.length / CHARS_PER_TOKEN_LOW), MAX_OUTPUT_TOKENS_NOTE) };
+    if (bytes(prompt) > MAX_NOTE_PROMPT_BYTES) return { ok: false, error: 'This note request is too long.' };
+    return { ok: true, maxUsd: maxUsd(resolved || model || 'unknown', bytes(prompt), MAX_OUTPUT_TOKENS_NOTE) };
   }
 
   async function read(reader, input) {
@@ -121,7 +125,7 @@ function createGeminiReaders({ apiKey, vertex, model, modelB, client }) {
   // Plain text generation (the drafted notes). Returns { ok, text, model, ms, usage, usd } or { ok: false, error }.
   async function write(prompt) {
     const m = await resolveModel();
-    if (prompt.length > MAX_NOTE_PROMPT_CHARS) return { ok: false, model: m, error: 'This note request is too long.' };
+    if (bytes(prompt) > MAX_NOTE_PROMPT_BYTES) return { ok: false, model: m, error: 'This note request is too long.' };
     const t0 = Date.now();
     try {
       const res = await withTimeout(ai.models.generateContent({ model: m, contents: [{ role: 'user', parts: [{ text: prompt }] }], config: { temperature: 0.4, maxOutputTokens: MAX_OUTPUT_TOKENS_NOTE } }), CALL_TIMEOUT_MS);
@@ -139,4 +143,4 @@ function createGeminiReaders({ apiKey, vertex, model, modelB, client }) {
   return { mode: 'gemini', read, write, resolveModel, estimateRead, estimateWrite };
 }
 
-module.exports = { createGeminiReaders, MAX_LINES, MAX_PHOTOS, MAX_OUTPUT_TOKENS_READER, MAX_OUTPUT_TOKENS_NOTE, MAX_PROMPT_CHARS, MAX_TEXT_PER_LINE };
+module.exports = { createGeminiReaders, MAX_LINES, MAX_PHOTOS, MAX_OUTPUT_TOKENS_READER, MAX_OUTPUT_TOKENS_NOTE, MAX_PROMPT_BYTES, MAX_TEXT_PER_LINE, TOKENS_PER_PHOTO_MAX, SCHEMA_BYTES };

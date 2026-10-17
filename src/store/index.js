@@ -7,6 +7,7 @@
 //   bulkSet(collection, docs)      -> write many documents (each has an id)
 //   clear()                        -> remove everything (tests and re-seeding only)
 //   close()
+//   transact(collection, id, fn)   -> read-modify-write of one document as a transaction
 //   scope(ws)                      -> (root adapter only) the same interface over one workspace
 // Workspace collections: users, projects, periods, photos, submissions, decisions, transmittals,
 // monitoring, meta, aicache, notecache (answers generated in that copy). Shared on the root: spend,
@@ -23,7 +24,7 @@ function createRootStore(config) {
   return createMemoryStore();
 }
 
-const WRITES = new Set(['set', 'update', 'add', 'bulkSet', 'clear']);
+const WRITES = new Set(['set', 'update', 'add', 'bulkSet', 'clear', 'transact']);
 
 // The store the app uses: every call goes to the current request's workspace. The seeded demo
 // ("template") is read-only for requests; only seeding (outside a request) writes to it.
@@ -39,7 +40,7 @@ function createScopedStore(root, fallbackWs = MAIN) {
     return cache.get(ws);
   };
   const out = { kind: root.kind, root };
-  for (const m of ['get', 'set', 'update', 'add', 'find', 'bulkSet', 'clear']) {
+  for (const m of ['get', 'set', 'update', 'add', 'find', 'bulkSet', 'clear', 'transact']) {
     out[m] = (...a) => {
       const ctx = als.getStore() || {};
       if (WRITES.has(m) && ctx.request && (ctx.ws || fallbackWs) === TEMPLATE) {

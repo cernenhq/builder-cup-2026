@@ -231,3 +231,14 @@ th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: v
 .tl-btn { font: inherit; font-size: 14px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
 .tl-btn:disabled { opacity: .6; cursor: progress; }
 .tl-msg:empty { display: none; }
+
+/* --- comparison swipe --- */
+.swipe { position: absolute; inset: 0; display: none; background-size: 100% 100%; background-repeat: no-repeat; pointer-events: none; z-index: 3; clip-path: inset(0 50% 0 0); }
+.swipe.show { display: block; }
+.swipe-line { position: absolute; top: 0; bottom: 0; left: var(--swipe-x, 50%); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
+.swipe-tag { bottom: 10px; left: var(--swipe-x, 50%); }
+.lens-mode { display: inline-flex; gap: 0; margin-left: 10px; vertical-align: middle; }
+.lens-mode button { border: 1px solid var(--line, #cfc8bb); background: #fff; padding: 3px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+.lens-mode button:first-child { border-radius: 6px 0 0 6px; }
+.lens-mode button:last-child { border-radius: 0 6px 6px 0; border-left: 0; }
+.lens-mode button.on { background: #1c1b18; color: #fff; }

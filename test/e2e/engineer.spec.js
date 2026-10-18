@@ -142,9 +142,19 @@ test.describe('Engineer / person in charge', () => {
     expect(await lens.evaluate((el) => el.style.backgroundImage)).toContain('/api/photos/');
     // The evidence boxes stay on the photo.
     expect(await st.locator('.box').count()).toBeGreaterThan(0);
+    // Swipe: the other month covers the photo from the left edge up to the pointer.
+    await page.getByTestId('mode-swipe').click();
+    await expect(page.getByTestId('lens-status')).toContainText('Drag across the photo');
+    await st.hover({ position: { x: 150, y: 120 } });
+    const sw = page.getByTestId('swipe');
+    await expect(sw).toBeVisible();
+    expect(await sw.evaluate((el) => el.style.clipPath)).toMatch(/inset\(0(px)? [0-9.]+% 0(px)? 0(px)?\)/);
+    await expect(lens).toBeHidden();
+    await page.getByTestId('mode-lens').click();
     await pick.selectOption('');
     await st.hover({ position: { x: 220, y: 140 } });
     await expect(lens).toBeHidden();
+    await expect(sw).toBeHidden();
   });
 
   test('E11: Draft with Gemini in step 4 shows an editable draft from the decision log only', async ({ page }) => {

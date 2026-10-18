@@ -43,4 +43,11 @@ function validateFindings(findings, claimIds) {
   return { ok: true };
 }
 
-module.exports = { VERDICTS, CONFIDENCE, VERDICT_SCHEMA, validateFindings };
+// The schema for one request: claim_id may only be one of the IDs sent in that request.
+function verdictSchemaFor(claimIds) {
+  const s = JSON.parse(JSON.stringify(VERDICT_SCHEMA));
+  s.properties.findings.items.properties.claim_id = { type: 'STRING', enum: [...new Set(claimIds.map(String))] };
+  return s;
+}
+
+module.exports = { VERDICTS, CONFIDENCE, VERDICT_SCHEMA, verdictSchemaFor, validateFindings };

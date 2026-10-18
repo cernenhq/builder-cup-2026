@@ -44,6 +44,7 @@ The saved Gemini run for project P-001 was scored once against a fixed reference
 - On reference lines, the readers disagreed 2 times (no default; the person decides) and gave no answer 3 times.
 - In this run, calls for two months timed out or failed. September 2025 had no answer from either reader, so its lines count as no answer. In May 2026 only reader B failed; those lines took their default from reader A alone.
 - Median model call: 41 s. Estimated spend for the run: US$0.83.
+- After this run, the prompt and response schema were changed so that readers copy each line's claim_id exactly (the schema now allows only the IDs sent in that request). Live testing had shown readers inventing IDs for office-typed lines, which the format check rejected. The verdict instructions did not change, and the score above was not re-run.
 - One run, so this is not a noise estimate. The team wrote the prompt, the claims and the reference labels, so this is development data.
 
 [`eval/R2b_retry_timedout_months_2026-10-17T2216.md`](eval/R2b_retry_timedout_months_2026-10-17T2216.md) is a retry of the months that had no full answer, run only so the demo has saved answers for them. Its report includes aggregate figures because the same script wrote it, but it does not replace the headline score above, which comes from the single scored run.

@@ -35,7 +35,11 @@ test('sends one structured-output request with the schema and the photo inline',
   assert.equal(r.model, 'gemini-3.6-flash', 'model picked from the key when GEMINI_MODEL is unset');
   const req = c.calls[0];
   assert.equal(req.config.responseMimeType, 'application/json');
-  assert.deepEqual(req.config.responseSchema, VERDICT_SCHEMA);
+  // Same schema, except claim_id is limited to the IDs sent in this request.
+  assert.deepEqual(req.config.responseSchema.properties.findings.items.properties.claim_id, { type: 'STRING', enum: ['Q071'] });
+  assert.deepEqual(req.config.responseSchema.properties.findings.items.required, VERDICT_SCHEMA.properties.findings.items.required);
+  assert.match(req.contents[0].parts[0].text, /claim_id Q071/);
+  assert.match(req.contents[0].parts[0].text, /exact value after "claim_id" \(one of: Q071\)/);
   assert.equal(req.contents[0].parts[1].inlineData.mimeType, 'image/jpeg');
   assert.match(req.contents[0].parts[0].text, /Q071/);
 });

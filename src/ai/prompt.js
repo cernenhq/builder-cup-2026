@@ -14,8 +14,12 @@ function correctionsText(corrections) {
   );
 }
 
+// Each line is labelled with its claim_id, which the reader must copy exactly (the response schema also
+// limits claim_id to these values).
 function linesText(claims) {
-  return claims.map((c) => `${c.id}: "${c.statement}" (question to check: ${c.question})`).join('\n');
+  const ids = claims.map((c) => c.id).join(', ');
+  return `${claims.map((c) => `- claim_id ${c.id}: "${c.statement}" (question to check: ${c.question})`).join('\n')}
+Give exactly one finding per line. Set claim_id to the exact value after "claim_id" (one of: ${ids}). Do not reword, number or combine claim IDs.`;
 }
 
 const COMMON_RULES = `Quantities, percentages and hidden work (waterproofing, interior work, buried work, anything inside the building) cannot be established by photos: answer not_assessable for those.

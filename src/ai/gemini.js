@@ -3,7 +3,7 @@
 // A GEMINI_API_KEY is still accepted for local use, never committed.
 const sharp = require('sharp');
 const { GoogleGenAI } = require('@google/genai');
-const { VERDICT_SCHEMA, validateFindings } = require('./schema');
+const { VERDICT_SCHEMA, verdictSchemaFor, validateFindings } = require('./schema');
 const { promptFor } = require('./prompt');
 const { estimateUsd, maxUsd } = require('./spend');
 
@@ -78,7 +78,7 @@ function createGeminiReaders({ apiKey, vertex, model, modelB, client }) {
     const text = promptFor(reader, input);
     if (bytes(text) > MAX_PROMPT_BYTES) return { model: m, error: 'This request is too long for a live check.' };
     const photos = Math.min(MAX_PHOTOS, input.photos.length);
-    const inputTokens = bytes(text) + SCHEMA_BYTES + photos * TOKENS_PER_PHOTO_MAX;
+    const inputTokens = bytes(text) + bytes(JSON.stringify(verdictSchemaFor(input.claims.map((c) => c.id)))) + photos * TOKENS_PER_PHOTO_MAX;
     return { model: m, text, maxUsd: maxUsd(m, inputTokens, MAX_OUTPUT_TOKENS_READER) };
   }
   async function estimateRead(reader, input) {
@@ -103,7 +103,7 @@ function createGeminiReaders({ apiKey, vertex, model, modelB, client }) {
         ai.models.generateContent({
           model: m,
           contents: [{ role: 'user', parts }],
-          config: { responseMimeType: 'application/json', responseSchema: VERDICT_SCHEMA, temperature: reader === 'B' ? 0.3 : 0.1, maxOutputTokens: MAX_OUTPUT_TOKENS_READER }
+          config: { responseMimeType: 'application/json', responseSchema: verdictSchemaFor(input.claims.map((c) => c.id)), temperature: reader === 'B' ? 0.3 : 0.1, maxOutputTokens: MAX_OUTPUT_TOKENS_READER }
         }),
         CALL_TIMEOUT_MS
       );

@@ -14,7 +14,8 @@ const USERS = [
   { id: 'mayor', role: 'mayor', name: 'Mayor Lina Torres (demo)', title: 'Municipal Mayor' },
   { id: 'aud-coa', role: 'auditor', name: 'Rafael Santos (demo)', title: 'COA resident auditor', agency: 'COA' },
   { id: 'aud-ias', role: 'auditor', name: 'Mila Ocampo (demo)', title: 'Internal Audit Service', agency: 'IAS' },
-  { id: 'aud-dilg', role: 'auditor', name: 'Jun Bautista (demo)', title: 'DILG field officer', agency: 'DILG' }
+  { id: 'aud-dilg', role: 'auditor', name: 'Jun Bautista (demo)', title: 'DILG field officer', agency: 'DILG' },
+  { id: 'fund-grace', role: 'funder', name: 'Grace Lim (demo)', title: 'Owner and lender representative, read only' }
 ];
 
 // ---------- P-001: the building on the public camera ----------

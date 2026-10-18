@@ -9,7 +9,7 @@ const TIMELINE_FROM_DEFAULT = '2025-06';
 const TIMELINE_TO_DEFAULT = '2027-08';
 
 module.exports = function registerOwnerRoutes(app, { store, allow, wrap, today, config }) { // eslint-disable-line no-unused-vars
-  app.get('/api/owner/projects/:id/trajectory', allow('reviewer', 'engineer', 'auditor'), wrap(async (req, res) => {
+  app.get('/api/owner/projects/:id/trajectory', allow('reviewer', 'engineer', 'auditor', 'funder'), wrap(async (req, res) => {
     const project = await store.get('projects', req.params.id);
     if (!project) return res.status(404).json({ error: 'No such project.' });
     const [periods, photos, decisions] = await Promise.all([

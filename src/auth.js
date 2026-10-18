@@ -7,7 +7,7 @@
 const crypto = require('crypto');
 
 const COOKIE = 'pop_session';
-const ROLES = ['engineer', 'reviewer', 'mayor', 'auditor'];
+const ROLES = ['engineer', 'reviewer', 'mayor', 'auditor', 'funder'];
 
 function b64url(buf) {
   return Buffer.from(buf).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');

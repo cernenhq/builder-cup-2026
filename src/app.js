@@ -613,7 +613,8 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   }));
 
   // ---------- photos ----------
-  r.get('/api/photos/:photoId', allow(...STAFF_READ), wrap(async (req, res) => {
+  // The owner and lender view (funder) may see site photos too; it is read only everywhere else.
+  r.get('/api/photos/:photoId', allow(...STAFF_READ, 'funder'), wrap(async (req, res) => {
     const ph = await store.get('photos', req.params.photoId);
     if (!ph) return res.status(404).json({ error: 'No such photo.' });
     const got = await photoStore.get(ph.storageKey);
@@ -726,6 +727,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
 
   // ---------- owner view and schedule trajectory (src/routes/owner.js) ----------
   require('./routes/owner')(r, { store, allow, wrap, today, config });
+  require('./routes/funder')(r, { store, allow, wrap, today, config });
   require('./routes/translate')(r, { store, rootStore, wrap, config, spend, publicFor: (id) => publicFor(id) });
   require('./routes/analytics')(r, { allow, wrap, config, analytics });
 
@@ -746,7 +748,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   const sendPage = (req, res, file) => res.type('html').send(page(file).replace(/\{\{BASE\}\}/g, req.base));
   r.use('/static', express.static(path.join(PUBLIC_DIR, 'static'), { maxAge: '5m' }));
   r.get('/', (req, res) => (req.user ? res.redirect(`${req.base}/${req.user.role}`) : sendPage(req, res, 'login.html')));
-  for (const role of ['engineer', 'reviewer', 'mayor', 'auditor']) {
+  for (const role of ['engineer', 'reviewer', 'mayor', 'auditor', 'funder']) {
     r.get(`/${role}`, (req, res) => {
       if (!req.user || req.user.role !== role) return res.redirect(`${req.base}/`);
       sendPage(req, res, `${role}.html`);

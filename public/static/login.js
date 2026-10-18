@@ -6,7 +6,8 @@
     engineer: 'Upload milestone photos and the progress claim, run the check, enter percent complete once, log submissions and monitoring work.',
     reviewer: 'Confirm or override every line with a reason. Monday view of what is lagging and what is due.',
     mayor: 'Only the items that have been escalated, in plain words.',
-    auditor: 'Read-only decision log and submission log, with who decided and when.'
+    auditor: 'Read-only decision log and submission log, with who decided and when.',
+    funder: 'Owner and lender, read only: where each project stands against plan, what the office confirmed from photos, and the plan drawn over the site photo.'
   };
   let users = [];
   try {
@@ -15,7 +16,7 @@
     main.innerHTML = '<div class="card section"><h2>Sign in</h2><p>Demo sign-in is turned off on this deployment.</p></div>';
     return;
   }
-  const groups = ['engineer', 'reviewer', 'mayor', 'auditor'];
+  const groups = ['engineer', 'reviewer', 'mayor', 'auditor', 'funder'];
   main.innerHTML = `<section class="section"><h1>Sign in for the demo</h1>
     <p class="small">Pick a person. This demo sign-in stands in for real sign-in (Google sign-in or Identity Platform); the server still checks the role on every request.</p></section>
     ${groups

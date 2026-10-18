@@ -8,7 +8,7 @@ One Node.js service (Express) serves the API and a plain HTML/CSS/JS front end. 
 
 ## Try it in five minutes
 
-**Live app:** [Cloud Run URL: added after deployment]. Pick a role on the sign-in page; no password. Everything in it is public footage or labelled fictional. The demo date is fixed to 1 June 2026 so the fictional progress claims line up with their photos. Each visitor works on a private copy of the demo, so you can change anything. Access to a copy ends 24 hours after it is created; it is then deleted (see "Deploy to Cloud Run").
+**Live app:** https://proof-of-progress-508715223415.asia-southeast1.run.app. Pick a role on the sign-in page; no password. Everything in it is public footage or labelled fictional. The demo date is fixed to 1 June 2026 so the fictional progress claims line up with their photos. Each visitor works on a private copy of the demo, so you can change anything. Access to a copy ends 24 hours after it is created; it is then deleted (see "Deploy to Cloud Run").
 
 **Saved and live Gemini runs.** The supplied demo inputs open on **saved Gemini runs** (model and date shown): project P-001 from June 2025 to April 2026, and project P-003 for May 2026. Anything new needs a **live** run, for example May 2026 for P-001 after you upload a photo. Saved drafts from **Draft with Gemini** exist only for the seeded April 2026 decisions; if you change a decision, the note needs a live draft. Judges and organisers can turn on live Gemini runs and drafts with the access code given in the submission form (sign-in page, "Judges and organisers"). Live use has a daily limit.
 

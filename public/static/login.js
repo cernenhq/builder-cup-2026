@@ -25,7 +25,7 @@
     return;
   }
   const groups = ['funder', 'mayor', 'engineer', 'reviewer', 'auditor'];
-  main.innerHTML = `<section class="section card" data-testid="start-here"><h2>New here?</h2><p class="small">A guided tour walks through the demo in about three minutes, using the real screens.</p><p><button type="button" class="btn primary" data-tour-start data-testid="tour-start">Take the tour</button> <a class="btn" href="${esc(PoP.base)}/evidence">Evidence: measured, not claimed</a> <a class="btn" href="${esc(PoP.base)}/hood">Under the hood</a></p></section>
+  main.innerHTML = `<section class="section card" data-testid="start-here"><h2>New here?</h2><p class="small">A guided tour walks through the demo in about three minutes, using the real screens.</p><p><button type="button" class="btn primary" data-tour-start data-testid="tour-start">Take the tour</button> <a class="btn" href="${esc(PoP.base)}/evidence">Evidence: measured, not claimed</a> <a class="btn" href="${esc(PoP.base)}/hood">Under the hood</a> <a class="btn" href="${esc(PoP.base)}/prototype" data-testid="prototype-link">Interactive prototype (recorded results)</a></p></section>
     <section class="section"><h1>Sign in for the demo</h1>
     <p class="small">Pick a person. This demo sign-in stands in for real sign-in (Google sign-in or Identity Platform); the server still checks the role on every request.</p></section>
     ${groups

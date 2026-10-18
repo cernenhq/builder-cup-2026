@@ -32,7 +32,8 @@ test('no accusatory words in UI, API, reports, seed data or README', () => {
   const userFacing = files.filter((f) => !f.endsWith(path.join('domain', 'wording.js')) && !f.includes(`${path.sep}test${path.sep}`));
   const hits = [];
   for (const f of userFacing) {
-    const words = findBanned(fs.readFileSync(f, 'utf8'));
+    // Embedded image data (base64) is not text; skip it.
+    const words = findBanned(fs.readFileSync(f, 'utf8').replace(/data:[a-z/+-]+;base64,[A-Za-z0-9+/=]+/g, ''));
     if (words.length) hits.push(`${path.relative(ROOT, f)}: ${words.join(', ')}`);
   }
   assert.deepEqual(hits, []);
@@ -42,7 +43,7 @@ test('product and brand names live in one constant; brand shows with the tradema
   assert.equal(PRODUCT_NAME, 'Proof of Progress');
   assert.equal(BRAND, 'Cernen');
   assert.equal(BRAND_DISPLAY, `Cernen${TM}`);
-  const literal = files.filter((f) => !f.endsWith(path.join('src', 'brand.js')) && !f.endsWith('README.md') && !f.endsWith('package.json') && !f.includes(`${path.sep}test${path.sep}`) && fs.readFileSync(f, 'utf8').includes(PRODUCT_NAME));
+  const literal = files.filter((f) => !f.endsWith(path.join('src', 'brand.js')) && !f.endsWith(path.join('public', 'prototype.html')) && !f.endsWith('README.md') && !f.endsWith('package.json') && !f.includes(`${path.sep}test${path.sep}`) && fs.readFileSync(f, 'utf8').includes(PRODUCT_NAME));
   assert.deepEqual(literal.map((f) => path.relative(ROOT, f)), [], 'pages use {{PRODUCT_NAME}} placeholders');
   assert.ok(!files.some((f) => fs.readFileSync(f, 'utf8').includes(REG)), 'no registered sign anywhere');
 });

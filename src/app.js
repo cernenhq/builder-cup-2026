@@ -735,6 +735,13 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   // ---------- owner view and schedule trajectory (src/routes/owner.js) ----------
   require('./routes/owner')(r, { store, allow, wrap, today, config });
   require('./routes/funder')(r, { store, allow, wrap, today, config });
+  // The interactive prototype (public build: trade-secret and strategy views removed). One self-contained
+  // page, so it gets its own policy: inline scripts allowed for this page only, no outside calls except fonts.
+  r.get('/prototype', (req, res) => {
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.sendFile(path.join(PUBLIC_DIR, 'prototype.html'));
+  });
   require('./routes/insight')(r, { allow, wrap, config, spend, sendPage: (...a) => sendPage(...a) });
   require('./routes/translate')(r, { store, rootStore, wrap, config, spend, publicFor: (id) => publicFor(id) });
   require('./routes/analytics')(r, { allow, wrap, config, analytics });

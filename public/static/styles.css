@@ -299,3 +299,41 @@ html.pop-tour-on body { padding-bottom: 200px; }
 .insight-flow li span { display: block; }
 .insight-fails li { margin: 4px 0; }
 .insight-foot { margin: 20px 0 32px; }
+
+/* Owner page overview */
+.ov { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.ov-panel { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; background: var(--card); min-width: 0; }
+.ov-wide { grid-column: 1 / -1; }
+.ov-row { display: flex; gap: 8px; align-items: baseline; margin: 6px 0; }
+.ov-row .chip { margin: 2px 0; }
+.ov-mon { font-size: 12px; color: var(--muted); min-width: 64px; }
+.ov-big { font-family: var(--serif); font-size: 28px; font-weight: 600; }
+.ov-bar { display: flex; height: 14px; border-radius: 4px; overflow: hidden; margin: 8px 0; background: #eceae4; }
+.ov-seg { display: block; height: 100%; }
+.ov-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.ov-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.c-con { background: var(--con); } .c-dis { background: #d9a13a; } .c-na { background: #b9b4a8; } .c-sup { background: var(--sup); }
+.c-wait { background: repeating-linear-gradient(45deg, #d9a13a, #d9a13a 3px, #f3dfb4 3px, #f3dfb4 6px); } .c-none { background: #e3eef3; }
+.ov-scroll { overflow-x: auto; }
+.ov-grid, .ov-trade { border-collapse: collapse; width: 100%; }
+.ov-grid th, .ov-grid td, .ov-trade th, .ov-trade td { padding: 3px 4px; border: 0; text-align: center; font-size: 12px; text-transform: none; letter-spacing: 0; }
+.ov-grid tbody th, .ov-trade tbody th { text-align: left; font-weight: 500; color: var(--ink); white-space: nowrap; padding-right: 10px; }
+.ov-trade tbody th { white-space: normal; min-width: 150px; }
+.ov-grid .dot { display: inline-block; margin: 0; }
+.dot.ov-i { display: inline-block; margin: 0 3px 0 8px; vertical-align: -1px; }
+.ov-none { color: #c9c4b8; }
+.ov-cell { display: block; height: 14px; min-width: 18px; border-radius: 2px; }
+.ov-stage { position: relative; }
+.ov-pin { position: absolute; transform: translate(-50%, -50%); width: 26px; height: 26px; border-radius: 50%; background: var(--con); color: #fff; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+.ov-list { padding-left: 22px; margin: 10px 0 0; }
+.ov-list li { margin-bottom: 6px; }
+.ov-who-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.ov-who svg { max-width: 100%; height: auto; }
+.ov-ring { stroke: var(--card); stroke-width: 2; cursor: pointer; }
+.ov-ring.r0 { fill: #1f5a55; } .ov-ring.r1 { fill: #2e7a4d; } .ov-ring.r2 { fill: #3d6f9e; } .ov-ring.r3 { fill: #a8701a; } .ov-ring.r4 { fill: #7d5a8c; } .ov-ring.r5 { fill: #7d786d; }
+.ov-seg-g text { fill: #fff; font-size: 12px; font-weight: 600; pointer-events: none; }
+.ov-seg-g.on .ov-ring, .ov-seg-g:focus .ov-ring { stroke: var(--ink); stroke-width: 3; outline: none; }
+.ov-seg-g:focus { outline: none; }
+.ov-core { font-family: var(--serif); font-size: 16px; font-weight: 600; fill: var(--ink); }
+.ov-core-s { font-size: 10px; fill: var(--muted); }
+.ov-who-text { flex: 1 1 220px; min-width: 0; }

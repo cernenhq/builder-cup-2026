@@ -168,3 +168,21 @@ test('the photo limit holds when two service instances share one database', asyn
   const res = await als.run({ ws: 'wtest', request: true }, () => Promise.all([a(1), b(1)]));
   assert.equal(res.filter(Boolean).length, 1);
 });
+
+test('a copy made from an older demo version is set aside: the visitor is signed out and the next sign-in gets a fresh copy', async () => {
+  const v = visitor();
+  assert.equal((await v.call('POST', '/api/auth/login', { userId: 'eng-ana' })).status, 200);
+  const oldWs = v.jar.get('pop_ws');
+  // Simulate a redeploy that changed the seeded demo.
+  const before = S.built.config.seedVersion;
+  S.built.config.seedVersion = `${before}-new`;
+  try {
+    const me = await v.call('GET', '/api/auth/me');
+    assert.equal(me.status, 401);
+    assert.ok(!v.jar.has('pop_ws'));
+    assert.equal((await v.call('POST', '/api/auth/login', { userId: 'eng-ana' })).status, 200);
+    assert.ok(v.jar.get('pop_ws') && v.jar.get('pop_ws') !== oldWs);
+  } finally {
+    S.built.config.seedVersion = before;
+  }
+});

@@ -14,7 +14,7 @@
     A = { enabled: false };
   }
   const fmtCounts = (o) => {
-    const parts = Object.keys(o || {}).sort().map((k) => `${chip(k)} ${esc(o[k])}`);
+    const parts = Object.keys(o || {}).sort().map((k) => `${k === 'not_read' ? '<span class="chip">not read (no access code)</span>' : chip(k)} ${esc(o[k])}`);
     return parts.length ? parts.join(' ') : '<span class="small">none yet</span>';
   };
   function analyticsCard() {

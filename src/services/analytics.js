@@ -114,7 +114,7 @@ UNION ALL SELECT 'overrode', NULL, COUNTIF(overrode) FROM w WHERE kind = 'decisi
 UNION ALL SELECT 'matched_default', NULL, COUNTIF(decision = ai_default) FROM w WHERE kind = 'decision'
 UNION ALL SELECT 'decisions', NULL, COUNT(*) FROM w WHERE kind = 'decision'
 UNION ALL SELECT 'copies', NULL, COUNT(DISTINCT copy_id) FROM w
-UNION ALL SELECT 'check_line', ai_default, COUNT(*) FROM w WHERE kind = 'check_line' GROUP BY ai_default`;
+UNION ALL SELECT 'check_line', IF(ai_mode = 'needs_code', 'not_read', ai_default), COUNT(*) FROM w WHERE kind = 'check_line' GROUP BY 2`;
 }
 
 // jobs.query response -> plain numbers.

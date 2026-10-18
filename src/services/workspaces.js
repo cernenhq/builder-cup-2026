@@ -45,11 +45,20 @@ function createWorkspaces({ rootStore, config, dayFn }) {
 
   function read(req) {
     const p = verify(parseCookies(req.headers.cookie)[WS_COOKIE], config.sessionSecret);
-    return p && p.ws ? { id: p.ws, expiresAt: new Date(p.exp).toISOString() } : null;
+    if (!p || !p.ws) return null;
+    // A copy made from an older seeded demo (before a redeploy changed it) is set aside; the next
+    // sign-in makes a fresh copy, so nobody keeps seeing superseded demo data.
+    if (config.seedVersion && p.v !== config.seedVersion) return null;
+    return { id: p.ws, expiresAt: new Date(p.exp).toISOString() };
   }
   function write(res, ws, secure, cookiePath = '/') {
     const exp = new Date(ws.expiresAt).getTime();
-    res.append('Set-Cookie', `${WS_COOKIE}=${sign({ ws: ws.id, exp }, config.sessionSecret)}; Path=${cookiePath}; HttpOnly; SameSite=Lax; Max-Age=${Math.max(0, Math.floor((exp - Date.now()) / 1000))}${secure ? '; Secure' : ''}`);
+    res.append('Set-Cookie', `${WS_COOKIE}=${sign({ ws: ws.id, exp, v: config.seedVersion || null }, config.sessionSecret)}; Path=${cookiePath}; HttpOnly; SameSite=Lax; Max-Age=${Math.max(0, Math.floor((exp - Date.now()) / 1000))}${secure ? '; Secure' : ''}`);
+  }
+
+  // A copy cookie that is present but no longer accepted (made from an older demo, or bad).
+  function isStale(req) {
+    return !!parseCookies(req.headers.cookie)[WS_COOKIE] && !read(req);
   }
 
   function readJudge(req) {
@@ -67,7 +76,7 @@ function createWorkspaces({ rootStore, config, dayFn }) {
     return crypto.timingSafeEqual(a, b);
   }
 
-  return { create, read, write, readJudge, writeJudge, codeMatches };
+  return { create, read, write, isStale, readJudge, writeJudge, codeMatches };
 }
 
 module.exports = { createWorkspaces, WS_COOKIE, JUDGE_COOKIE };

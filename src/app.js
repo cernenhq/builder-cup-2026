@@ -105,6 +105,13 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     const ctx = { ws: MAIN, judge, request: true, expiresAt: null };
     if (config.workspaces) {
       const cur = workspaces.read(req);
+      if (!cur && workspaces.isStale(req)) {
+        // The visitor's copy was made from an older demo: sign them out so the next sign-in makes a
+        // fresh copy (they would otherwise see the shared demo read-only under an old session).
+        clearSession(res, cookiePath(req));
+        res.append('Set-Cookie', `pop_ws=; Path=${cookiePath(req)}; HttpOnly; SameSite=Lax; Max-Age=0`);
+        req.headers.cookie = String(req.headers.cookie || '').split(';').filter((c) => !/^\s*(pop_session|pop_ws)=/.test(c)).join(';');
+      }
       req.workspace = cur;
       ctx.ws = cur ? cur.id : TEMPLATE;
       ctx.expiresAt = cur ? cur.expiresAt : null;

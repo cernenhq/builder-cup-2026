@@ -59,6 +59,7 @@ async function build(env = process.env) {
   const seedReaders = createSeedReaders({ rootStore, model: config.ai === 'mock' ? null : config.geminiModel });
   const vision = config.vision ? createVision({ config, rootStore, store, spend }) : null;
   const version = seedVersion();
+  config.seedVersion = version; // visitor copies remember the demo version they were made from
   const reseed = async () => runInWs(seedWs, async () => {
     await seedDemo({ store, photoStore, readers: seedReaders, vision: savedOnly(vision) });
     await store.update('meta', 'seed', { version });

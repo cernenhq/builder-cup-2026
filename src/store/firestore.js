@@ -7,7 +7,7 @@
 const crypto = require('crypto');
 const { Firestore } = require('@google-cloud/firestore');
 
-const COLLECTIONS = ['users', 'projects', 'periods', 'photos', 'submissions', 'decisions', 'transmittals', 'monitoring', 'meta', 'aicache', 'notecache'];
+const COLLECTIONS = ['users', 'projects', 'periods', 'photos', 'submissions', 'decisions', 'transmittals', 'monitoring', 'meta', 'aicache', 'notecache', 'visioncache', 'translatecache'];
 
 function createFirestoreStore({ projectId, databaseId, prefix = '', ttlHours = 24 }) {
   const db = new Firestore({ projectId, databaseId, ignoreUndefinedProperties: true });

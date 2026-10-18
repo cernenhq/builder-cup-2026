@@ -21,7 +21,8 @@ function stampDate(stamp) {
   return `${m[3]}-${m[1]}-${m[2]}`;
 }
 
-async function seedDemo({ store, photoStore, readers: seedReaders }) {
+async function seedDemo({ store, photoStore, readers: seedReaders, vision = null }) {
+  // vision, when given, must be saved-only (see savedOnly in src/ai/vision.js): seeding never calls live.
   await store.clear();
   await photoStore.clear();
   const today = D.DEMO_TODAY;
@@ -80,7 +81,7 @@ async function seedDemo({ store, photoStore, readers: seedReaders }) {
       await contractorSubmit({ store, photoStore, project: p1, period: m.period, claims, files: [], note: '', receivedAt: `${addDays(monthEnd(m.period), -3)}T08:00:00.000Z` });
     }
     if (m.notSeeded) continue; // May 2026 waits for the office's photo upload and check
-    await runCheck({ store, photoStore, readers, project: p1, period: m.period, user: ana });
+    await runCheck({ store, photoStore, readers, project: p1, period: m.period, user: ana, vision });
     const per = await store.get('periods', periodId('P-001', m.period));
     const at = `${addDays(monthEnd(m.period), 5)}T09:00:00.000Z`;
     for (const l of per.check.lines) {
@@ -128,7 +129,7 @@ async function seedDemo({ store, photoStore, readers: seedReaders }) {
     note: 'May progress claim. Photo of the front.',
     receivedAt: '2026-05-28T03:00:00.000Z'
   });
-  await runCheck({ store, photoStore, readers, project: p3, period: '2026-05', user: ana });
+  await runCheck({ store, photoStore, readers, project: p3, period: '2026-05', user: ana, vision });
 
   // ---------- transmittal log ----------
   for (const pr of D.PROJECTS) {

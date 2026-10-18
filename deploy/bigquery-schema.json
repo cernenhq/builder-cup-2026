@@ -1,0 +1,16 @@
+[
+ {"name": "event_time", "type": "TIMESTAMP", "mode": "NULLABLE"},
+ {"name": "kind", "type": "STRING", "mode": "NULLABLE"},
+ {"name": "copy_id", "type": "STRING", "mode": "NULLABLE"},
+ {"name": "project_id", "type": "STRING", "mode": "NULLABLE"},
+ {"name": "period", "type": "STRING", "mode": "NULLABLE"},
+ {"name": "line_key", "type": "STRING", "mode": "NULLABLE"},
+ {"name": "ai_mode", "type": "STRING", "mode": "NULLABLE"},
+ {"name": "model", "type": "STRING", "mode": "NULLABLE"},
+ {"name": "ai_default", "type": "STRING", "mode": "NULLABLE"},
+ {"name": "reader_a", "type": "STRING", "mode": "NULLABLE"},
+ {"name": "reader_b", "type": "STRING", "mode": "NULLABLE"},
+ {"name": "decision", "type": "STRING", "mode": "NULLABLE"},
+ {"name": "overrode", "type": "BOOL", "mode": "NULLABLE"},
+ {"name": "decided_by_role", "type": "STRING", "mode": "NULLABLE"}
+]

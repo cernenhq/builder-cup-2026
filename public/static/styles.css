@@ -218,3 +218,16 @@ th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: v
 .owner-card td code { font-size: 12px; white-space: normal; }
 
 .banner-note { background: #fff4d6; border: 1px solid #e3c46b; border-radius: 6px; padding: 8px 10px; margin: 8px 0; font-size: 14px; }
+
+/* --- analytics --- */
+.analytics-card .analytics-stats { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 8px 0 4px; }
+.analytics-card .analytics-stats > div { display: flex; flex-direction: column; min-width: 96px; }
+.analytics-card .analytics-num { font: 600 24px var(--serif); line-height: 1.1; }
+.analytics-card .analytics-note { border-left: 3px solid var(--line); padding-left: 10px; margin-top: 8px; }
+
+/* --- translation --- */
+.tl-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.tl-bar .tl-label { margin: 0; flex: 1 1 260px; border-left: 3px solid var(--line); padding-left: 10px; }
+.tl-btn { font: inherit; font-size: 14px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
+.tl-btn:disabled { opacity: .6; cursor: progress; }
+.tl-msg:empty { display: none; }

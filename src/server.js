@@ -13,7 +13,7 @@ const { seedDemo } = require('./seed/seed');
 const { DEMO_TODAY } = require('./seed/demo-data');
 const { PRODUCT_NAME, BRAND } = require('./brand');
 const { runInWs, TEMPLATE, MAIN } = require('./workspace');
-const { createVision } = require('./ai/vision');
+const { createVision, savedOnly } = require('./ai/vision');
 const { createAnalytics } = require('./services/analytics');
 
 const SAVED_RUNS = path.join(__dirname, 'seed', 'saved-runs.json');
@@ -22,7 +22,7 @@ function loadSavedRuns() {
   try {
     return JSON.parse(fs.readFileSync(SAVED_RUNS, 'utf8'));
   } catch (e) {
-    return { aicache: [], notecache: [] };
+    return { aicache: [], notecache: [], visioncache: [] };
   }
 }
 
@@ -53,20 +53,20 @@ async function build(env = process.env) {
 
   // Saved Gemini answers and drafts (recorded once with scripts/record-runs.js) go into the shared store.
   const saved = loadSavedRuns();
-  for (const name of ['aicache', 'notecache']) {
+  for (const name of ['aicache', 'notecache', 'visioncache']) {
     for (const d of saved[name] || []) if (!(await rootStore.get(name, d.id))) await rootStore.set(name, d.id, d);
   }
   const seedReaders = createSeedReaders({ rootStore, model: config.ai === 'mock' ? null : config.geminiModel });
+  const vision = config.vision ? createVision({ config, rootStore, store, spend }) : null;
   const version = seedVersion();
   const reseed = async () => runInWs(seedWs, async () => {
-    await seedDemo({ store, photoStore, readers: seedReaders });
+    await seedDemo({ store, photoStore, readers: seedReaders, vision: savedOnly(vision) });
     await store.update('meta', 'seed', { version });
   });
   if (config.seed === 'demo' || config.seed === 'reset') {
     const meta = await runInWs(seedWs, () => store.get('meta', 'seed'));
     if (!meta || meta.version !== version || config.seed === 'reset') await reseed();
   }
-  const vision = config.vision ? createVision({ config, rootStore, store, spend }) : null;
   const analytics = createAnalytics(config);
   const app = createApp({ config, store, rootStore, photoStore, readers, live, spend, clock, reseed, vision, analytics });
   return { app, config, store, rootStore, photoStore, readers, live, spend, clock, vision, analytics };

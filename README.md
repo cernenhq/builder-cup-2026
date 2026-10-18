@@ -20,6 +20,23 @@ One Node.js service (Express) serves the API and a plain HTML/CSS/JS front end. 
 
 Expected results for the April 2026 claim are in the "Evaluation" section below. Keep checks to one project and one month at a time.
 
+## Google Cloud in this app
+
+| Service | What it does here |
+|---|---|
+| Gemini 3.8 Flash on Vertex AI | Two readers turn each claimed line into one question a photo can answer and return a verdict with an evidence box (structured output; the line ID is limited to the IDs sent). Also drafts the plain-language notes from the decision log. |
+| Cloud Vision API (web detection) | One more check before any AI reads the photo: has this site photo already appeared online? An exact match is a flag for review, not proof. |
+| Cloud Translation | The public progress note in Filipino, labelled machine translation; the English note stays the official text. |
+| BigQuery | Each check line and each decision streams in as a row (counts only: no names, no reasons, no free text). The auditor screen shows a 7-day summary across all demo visitors. |
+| Cloud Run | Hosts the service (Singapore). |
+| Firestore | All app data; a private copy of the demo per visitor; transactions for the spending ledger, the daily copy counter, the photo limit and stale checks; TTL policies delete visitor copies. |
+| Cloud Storage | Site photos in a private bucket; visitors' uploads are deleted after 2 days. |
+| Secret Manager | The session secret and the judge access code. |
+| Cloud Logging | Latency, tokens and estimated cost for every model call and every check. |
+| IAM | One service account with only what it needs; Gemini, Vision and Translation are called with its identity, so there is no API key. |
+
+Vision, Translation and BigQuery are switched on with `VISION=1`, `TRANSLATE=1` and `BQ_DATASET` (see `deploy/deploy.sh`; one-time setup in `deploy/setup-extra.sh`). Vision and Gemini calls need the judge access code and stay under the daily cap; Translation is open to everyone but also under the cap. Saved Vision results for the 12 demo photos are in `src/seed/saved-runs.json` (all 12: similar images online, no exact match).
+
 ## What it never does
 
 - It never approves, holds, withholds or releases a payment, and never sends anything to a contractor or agency. Report drafts are downloads; the office submits them and logs that it did.

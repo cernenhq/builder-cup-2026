@@ -4,6 +4,7 @@ const { dateChecks, locationCheck, reuseCheck, comparabilityCheck } = require('.
 const { questionFor, combine } = require('../domain/lines');
 const { neutralize, PHRASES } = require('../domain/wording');
 const { monthLabel } = require('../domain/escalation');
+const { als } = require('../workspace');
 
 function periodId(projectId, period) {
   return `${projectId}__${period}`;
@@ -31,7 +32,7 @@ function cleanFinding(f) {
   };
 }
 
-async function runCheck({ store, photoStore, readers, project, period, user }) {
+async function runCheck({ store, photoStore, readers, project, period, user, vision }) {
   const per = await getOrCreatePeriod(store, project, period);
   // The input revision this check reads (photos and claims). If it changes before the check is saved,
   // the result is kept for reference but marked stale.
@@ -51,6 +52,33 @@ async function runCheck({ store, photoStore, readers, project, period, user }) {
     if (i === 0) findings.push(comparabilityCheck(ph, prev));
     return { photoId: ph.id, fileName: ph.fileName, findings };
   });
+
+  // Photo bytes for the first 4 photos (the ones the readers see), loaded once and only when needed.
+  let bufsP = null;
+  const loadBufs = () => {
+    if (!bufsP) {
+      bufsP = (async () => {
+        const out = [];
+        for (const ph of photos.slice(0, 4)) {
+          const got = await photoStore.get(ph.storageKey);
+          if (got) out.push({ id: ph.id, buffer: got.buffer });
+        }
+        return out;
+      })();
+    }
+    return bufsP;
+  };
+
+  // Optional web check (Cloud Vision): "has this site photo appeared online?" Live only with the judge code.
+  if (vision && photos.length) {
+    const s = als.getStore();
+    const live = !!(s && s.judge);
+    for (const b of await loadBufs()) {
+      const pc = photoChecks.find((x) => x.photoId === b.id);
+      const ph = photos.find((x) => x.id === b.id);
+      if (pc) pc.findings.push(await vision.check(ph, b.buffer, { live }));
+    }
+  }
 
   const linesByKey = Object.fromEntries((project.lines || []).map((l) => [l.key, l]));
   const claims = (per.claims || []).filter((c) => linesByKey[c.lineKey]);
@@ -77,11 +105,7 @@ async function runCheck({ store, photoStore, readers, project, period, user }) {
   let readA = { mode: readers.mode, ok: true, findings: [] };
   let readB = readA;
   if (readerClaims.length && photos.length) {
-    const bufs = [];
-    for (const ph of photos.slice(0, 4)) {
-      const got = await photoStore.get(ph.storageKey);
-      if (got) bufs.push({ id: ph.id, buffer: got.buffer });
-    }
+    const bufs = await loadBufs();
     const input = {
       periodLabel: monthLabel(period),
       claims: readerClaims,

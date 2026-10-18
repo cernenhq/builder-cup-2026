@@ -6,10 +6,36 @@
   const main = $('#main');
   const projects = await api('/api/audit/projects');
   let pid = projects[0] && projects[0].id;
+  // Portfolio counts across all demo visitors (BigQuery). Hidden when analytics is off or unreachable.
+  let A = { enabled: false };
+  try {
+    A = (await api('/api/audit/analytics')) || { enabled: false };
+  } catch (e) {
+    A = { enabled: false };
+  }
+  const fmtCounts = (o) => {
+    const parts = Object.keys(o || {}).sort().map((k) => `${chip(k)} ${esc(o[k])}`);
+    return parts.length ? parts.join(' ') : '<span class="small">none yet</span>';
+  };
+  function analyticsCard() {
+    if (!A || !A.enabled) return '';
+    const share = A.matchedShare === null || A.matchedShare === undefined ? 'n/a' : `${Math.round(A.matchedShare * 100)}%`;
+    return `<div class="card section analytics-card" data-testid="analytics-card"><h2>Across all demo visitors (BigQuery, last 7 days)</h2>
+      <div class="analytics-stats">
+      <div><span class="analytics-num">${esc(A.copies)}</span><span class="small">demo copies</span></div>
+      <div><span class="analytics-num">${esc(A.decisions)}</span><span class="small">line decisions</span></div>
+      <div><span class="analytics-num">${esc(A.overrides)}</span><span class="small">set aside the AI default</span></div>
+      <div><span class="analytics-num">${esc(share)}</span><span class="small">matched the AI default</span></div>
+      <div><span class="analytics-num">${esc(A.checkLines)}</span><span class="small">lines checked</span></div>
+      </div>
+      <p class="small">Decisions: ${fmtCounts(A.decisionsByOutcome)}</p>
+      <p class="small">AI default on checked lines: ${fmtCounts(A.checkLinesByAiDefault)}</p>
+      <p class="small analytics-note">Counts only: no names or reasons leave the app's own database.</p></div>`;
+  }
 
   async function render() {
     const L = await api(`/api/audit/projects/${pid}/log`);
-    main.innerHTML = `<div class="card section"><div class="row"><label>Project <select id="psel" data-testid="audit-project">${projects
+    main.innerHTML = `${analyticsCard()}<div class="card section"><div class="row"><label>Project <select id="psel" data-testid="audit-project">${projects
       .map((p) => `<option value="${esc(p.id)}" ${p.id === pid ? 'selected' : ''}>${esc(p.name)} (${esc(p.contractId)})</option>`)
       .join('')}</select></label><span class="spacer"></span><a class="btn" href="/api/audit/projects/${esc(pid)}/log.csv" data-testid="audit-csv">Download CSV</a></div>
       <p class="small">Read only. Every line decision shows both readers, the AI default, what the reviewer decided, the reason, who and when. Timestamps are when the entry was made.</p></div>

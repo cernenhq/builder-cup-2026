@@ -11,12 +11,42 @@
       .join('')}</div>`;
     return;
   }
-  const n = await api(`/api/public/projects/${encodeURIComponent(id)}`);
-  main.innerHTML = `<div class="pub" data-testid="public-note"><h1 class="section">${esc(n.name)}</h1><div class="small">${esc(n.location)}${n.fictional ? ' · demo project, figures fictional' : ''}</div>
+  const en = await api(`/api/public/projects/${encodeURIComponent(id)}`);
+  const EN_HEADINGS = { photosShowHeading: 'What the photos show', notVisibleHeading: 'Not visible in the photos, or not yet confirmed', completeLabel: 'complete' };
+  let tl = null;
+
+  // Renders the note in English, or in Filipino when a machine translation is passed in.
+  function render(n, t) {
+    const h = t ? t.headings : EN_HEADINGS;
+    const langBar = t
+      ? `<div class="tl-bar section" data-testid="tl-bar"><p class="tl-label small">${esc(t.label)}</p><button type="button" class="tl-btn" data-tl="en">Show in English</button></div>`
+      : '<div class="tl-bar section" data-testid="tl-bar"><button type="button" class="tl-btn" data-tl="tl">Basahin sa Filipino (machine translation)</button><span class="tl-msg small" role="status"></span></div>';
+    main.innerHTML = `<div class="pub" data-testid="public-note"${t ? ' lang="tl"' : ''}><h1 class="section">${esc(n.name)}</h1><div class="small">${esc(n.location)}${n.fictional ? ' · demo project, figures fictional' : ''}</div>
+    ${langBar}
     <div class="card section">${n.hasPhoto ? `<img src="/api/public/projects/${esc(n.projectId)}/photo" alt="Latest site photo the office has looked at"><p class="small">Site photo, ${esc(n.photoPeriod)}.</p>` : '<p class="small">No site photo yet.</p>'}
-    <p class="big">${n.percent ? `${esc(n.percent.value)}% complete` : 'No progress reported yet'}</p>${n.percent ? `<p class="small">As reported by the ${esc(n.source)}, as of ${esc(n.percent.asOf)}.</p>` : ''}</div>
-    <div class="card section"><h2>What the photos show</h2>${n.photosShow.length ? `<ul>${n.photosShow.map((s) => `<li>${esc(s.text)} <span class="small">(${esc(s.month)})</span></li>`).join('')}</ul>` : '<p>Nothing has been confirmed from photos yet.</p>'}
-    <h2>Not visible in the photos, or not yet confirmed</h2>${n.notVisible.length ? `<ul>${n.notVisible.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>` : '<p>None listed.</p>'}
+    <p class="big">${n.percent ? `${esc(n.percent.value)}% ${esc(h.completeLabel)}` : 'No progress reported yet'}</p>${n.percent ? `<p class="small">As reported by the ${esc(n.source)}, as of ${esc(n.percent.asOf)}.</p>` : ''}</div>
+    <div class="card section"><h2>${esc(h.photosShowHeading)}</h2>${n.photosShow.length ? `<ul>${n.photosShow.map((s) => `<li>${esc(s.text)} <span class="small">(${esc(s.month)})</span></li>`).join('')}</ul>` : '<p>Nothing has been confirmed from photos yet.</p>'}
+    <h2>${esc(h.notVisibleHeading)}</h2>${n.notVisible.length ? `<ul>${n.notVisible.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>` : '<p>None listed.</p>'}
     <p class="small">${esc(n.explainer)}</p></div>
     <p class="small"><a href="/public">All projects</a></p></div>`;
+  }
+
+  main.addEventListener('click', async (ev) => {
+    const btn = ev.target.closest('.tl-btn');
+    if (!btn) return;
+    if (btn.dataset.tl === 'en') return render(en, null);
+    if (tl) return render(tl.note, tl);
+    const msg = main.querySelector('.tl-msg');
+    btn.disabled = true;
+    if (msg) msg.textContent = 'Translating...';
+    try {
+      tl = await api(`/api/public/projects/${encodeURIComponent(id)}/note?lang=tl`);
+      render(tl.note, tl);
+    } catch (e) {
+      btn.disabled = false;
+      if (msg) msg.textContent = (e && e.message) || 'Machine translation is not available right now. The English note is the official text.';
+    }
+  });
+
+  render(en, null);
 })();

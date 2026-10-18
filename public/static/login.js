@@ -2,12 +2,20 @@
   const { esc, api, header } = window.PoP;
   const { meta } = await header({ subtitle: 'Municipal Engineering Office' });
   const main = document.getElementById('main');
+  // Whoever releases the money comes first, then the LGU official, then the office that does the work.
+  const LABEL = {
+    funder: 'Owner or lender (funder)',
+    mayor: 'LGU official (Mayor)',
+    engineer: 'Engineer in charge',
+    reviewer: 'Office head (reviewer)',
+    auditor: 'Auditor (COA, IAS, DILG)'
+  };
   const DESC = {
-    engineer: 'Upload milestone photos and the progress claim, run the check, enter percent complete once, log submissions and monitoring work.',
-    reviewer: 'Confirm or override every line with a reason. Monday view of what is lagging and what is due.',
+    funder: 'Read only: where each project stands against plan, what the office confirmed from site photos, and the plan drawn over the camera view.',
     mayor: 'Only the items that have been escalated, in plain words.',
-    auditor: 'Read-only decision log and submission log, with who decided and when.',
-    funder: 'Owner and lender, read only: where each project stands against plan, what the office confirmed from photos, and the plan drawn over the site photo.'
+    engineer: 'Upload milestone photos and the progress claim, run the check, decide each line, enter percent complete once, log submissions and monitoring work.',
+    reviewer: 'Overrule any line with a reason. Monday view of what is slipping and what is due.',
+    auditor: 'Read-only decision log and submission log, with who decided and when.'
   };
   let users = [];
   try {
@@ -16,12 +24,12 @@
     main.innerHTML = '<div class="card section"><h2>Sign in</h2><p>Demo sign-in is turned off on this deployment.</p></div>';
     return;
   }
-  const groups = ['engineer', 'reviewer', 'mayor', 'auditor', 'funder'];
+  const groups = ['funder', 'mayor', 'engineer', 'reviewer', 'auditor'];
   main.innerHTML = `<section class="section"><h1>Sign in for the demo</h1>
     <p class="small">Pick a person. This demo sign-in stands in for real sign-in (Google sign-in or Identity Platform); the server still checks the role on every request.</p></section>
     ${groups
       .map(
-        (g) => `<section class="section"><h2 style="text-transform:capitalize">${esc(g)}</h2><p class="small">${esc(DESC[g])}</p><div class="roles">${users
+        (g) => `<section class="section"><h2 data-testid="role-group-${esc(g)}">${esc(LABEL[g])}</h2><p class="small">${esc(DESC[g])}</p><div class="roles">${users
           .filter((u) => u.role === g)
           .map((u) => `<button data-user="${esc(u.id)}"><b>${esc(u.name)}</b><span>${esc(u.title)}${u.agency ? `, ${esc(u.agency)}` : ''}</span></button>`)
           .join('')}</div></section>`

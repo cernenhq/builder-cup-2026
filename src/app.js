@@ -22,7 +22,8 @@ const { manilaDate } = require('./clock');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
-function createApp({ config, store, rootStore, photoStore, readers, live, spend, clock, reseed }) {
+function createApp({ config, store, rootStore, photoStore, readers, live, spend, clock, reseed, vision, analytics }) {
+  analytics = analytics || { enabled: false, record() {}, async summary() { return null; } };
   rootStore = rootStore || store.root || store;
   const app = express();
   app.disable('x-powered-by');
@@ -350,7 +351,8 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     const per = await store.get('periods', periodId(p.id, req.params.period));
     if (!per || !(per.claims || []).length) return res.status(400).json({ error: 'Add the claimed percent per line first (from the contractor or typed by the office).' });
     const t0 = Date.now();
-    const check = await runCheck({ store, photoStore, readers, project: p, period: req.params.period, user: req.user });
+    const check = await runCheck({ store, photoStore, readers, project: p, period: req.params.period, user: req.user, vision });
+    analytics.record('check', { project: p, period: req.params.period, check });
     const ms = Date.now() - t0;
     // Time per claimed line, photo in to verdict: logged for Cloud Logging (the deck's latency line).
     if (process.env.NODE_ENV !== 'test') console.log(JSON.stringify({ severity: 'INFO', message: 'check_run', aiMode: check.aiMode, lines: check.lines.length, ms, msPerLine: Math.round(ms / Math.max(1, check.lines.length)), model: check.models.A }));
@@ -460,7 +462,9 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     if (!p || !requireWrite(req, res, p)) return;
     try {
       const b = req.body || {};
-      res.json({ decision: await A.decideLine({ store, project: p, period: req.params.period, lineKey: b.lineKey, decision: b.decision, reason: b.reason, user: req.user }) });
+      const decision = await A.decideLine({ store, project: p, period: req.params.period, lineKey: b.lineKey, decision: b.decision, reason: b.reason, user: req.user });
+      analytics.record('decision', { project: p, decision });
+      res.json({ decision });
     } catch (e) {
       sendErr(res, e);
     }
@@ -694,6 +698,8 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
 
   // ---------- owner view and schedule trajectory (src/routes/owner.js) ----------
   require('./routes/owner')(app, { store, allow, wrap, today, config });
+  require('./routes/translate')(app, { store, rootStore, wrap, config, spend, publicFor: (id) => publicFor(id) });
+  require('./routes/analytics')(app, { allow, wrap, config, analytics });
 
   // ---------- test support (off unless ALLOW_TEST_RESET=1) ----------
   if (config.allowTestReset) {

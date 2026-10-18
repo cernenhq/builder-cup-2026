@@ -13,6 +13,8 @@ const { seedDemo } = require('./seed/seed');
 const { DEMO_TODAY } = require('./seed/demo-data');
 const { PRODUCT_NAME, BRAND } = require('./brand');
 const { runInWs, TEMPLATE, MAIN } = require('./workspace');
+const { createVision } = require('./ai/vision');
+const { createAnalytics } = require('./services/analytics');
 
 const SAVED_RUNS = path.join(__dirname, 'seed', 'saved-runs.json');
 
@@ -64,8 +66,10 @@ async function build(env = process.env) {
     const meta = await runInWs(seedWs, () => store.get('meta', 'seed'));
     if (!meta || meta.version !== version || config.seed === 'reset') await reseed();
   }
-  const app = createApp({ config, store, rootStore, photoStore, readers, live, spend, clock, reseed });
-  return { app, config, store, rootStore, photoStore, readers, live, spend, clock };
+  const vision = config.vision ? createVision({ config, rootStore, store, spend }) : null;
+  const analytics = createAnalytics(config);
+  const app = createApp({ config, store, rootStore, photoStore, readers, live, spend, clock, reseed, vision, analytics });
+  return { app, config, store, rootStore, photoStore, readers, live, spend, clock, vision, analytics };
 }
 
 if (require.main === module) {

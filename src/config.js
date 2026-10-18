@@ -46,6 +46,11 @@ function loadConfig(env = process.env) {
     dailyCapUsd: num(env.DAILY_CAP_USD, 3),
     // scripts/record-runs.js only: new answers and drafts become the shared saved seed runs.
     recordShared: bool(env.RECORD_SHARED, false),
+    // Optional Google Cloud features, each off unless set (deploy.sh sets them):
+    vision: bool(env.VISION, false), // Cloud Vision web detection: "has this photo appeared online?"
+    translate: bool(env.TRANSLATE, false), // Cloud Translation: the public note in Filipino
+    bqDataset: env.BQ_DATASET || '', // BigQuery: decision and check events for portfolio analytics
+    bqTable: env.BQ_TABLE || 'events',
     // Per-visitor workspaces (on for the public demo; off for local runs and tests).
     workspaces: bool(env.WORKSPACES, false),
     workspaceHours: num(env.WORKSPACE_HOURS, 24),

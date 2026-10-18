@@ -1,6 +1,7 @@
 // The HTTP service: JSON API with role guards on every route, plus the thin front end.
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const multer = require('multer');
 const { PRODUCT_NAME, BRAND, BRAND_DISPLAY } = require('./brand');
@@ -57,6 +58,18 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   const photoLimitMsg = `A visitor copy of the demo holds at most ${MAX_PHOTOS_PER_COPY} photos.`;
   const today = () => clock.today();
   const isSecure = (req) => req.secure || config.production;
+  // The visitor's address for rate limits. Behind the cernen.com proxy every request arrives from the
+  // proxy, so the proxy passes the visitor's address in x-cernen-client-ip together with the shared
+  // secret; without the secret the header is ignored.
+  const proxySecret = config.proxySecret ? Buffer.from(config.proxySecret) : null;
+  function fromProxy(req) {
+    const got = Buffer.from(String(req.get('x-cernen-proxy') || ''));
+    return !!proxySecret && got.length === proxySecret.length && crypto.timingSafeEqual(got, proxySecret);
+  }
+  function clientIp(req) {
+    const named = String(req.get('x-cernen-client-ip') || '').trim();
+    return named && named.length <= 64 && fromProxy(req) ? named : req.ip || 'x';
+  }
 
   app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -66,13 +79,28 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     next();
   });
   app.use(express.json({ limit: '1mb' }));
-  app.use('/api', requireAppHeader);
+
+  // Every route lives on one router, mounted at / and, when BASE_PATH is set, also at that path
+  // (cernen.com/builderscup reaches this service through a proxy that keeps the prefix). req.base is
+  // '' or the prefix; links, redirects and cookie paths are built from it so a visitor stays on the
+  // address they came in on.
+  const r = express.Router();
+  const cookiePath = (req) => req.base || '/';
+  r.use((req, res, next) => {
+    req.base = req.baseUrl || '';
+    // Answers here are per visitor (sign-in, workspace, judge access). Static files and photos set
+    // their own caching below; nothing else may be stored by a shared cache.
+    if (!req.path.startsWith('/static/')) res.setHeader('Cache-Control', 'no-store');
+    req.clientIp = clientIp(req);
+    next();
+  });
+  r.use('/api', requireAppHeader);
 
   // Workspace and judge access for this request. Without a workspace a visitor reads the seeded demo,
   // which is read-only for requests (src/store/index.js). A copy is created only by a valid sign-in or a
   // valid contractor submission (req.ensureWorkspace), after the request has been checked.
   const workspaces = createWorkspaces({ rootStore, config, dayFn: () => manilaDate(new Date()) });
-  app.use((req, res, next) => {
+  r.use((req, res, next) => {
     const judge = workspaces.readJudge(req);
     const ctx = { ws: MAIN, judge, request: true, expiresAt: null };
     if (config.workspaces) {
@@ -83,7 +111,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
       req.ensureWorkspace = async () => {
         if (ctx.ws !== TEMPLATE) return;
         const created = await workspaces.create();
-        workspaces.write(res, created, isSecure(req));
+        workspaces.write(res, created, isSecure(req), cookiePath(req));
         req.workspace = created;
         ctx.ws = created.id;
         ctx.expiresAt = created.expiresAt;
@@ -92,7 +120,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     req.judge = judge;
     als.run(ctx, () => next());
   });
-  app.use(authMiddleware({ config, store }));
+  r.use(authMiddleware({ config, store }));
 
   // ---------- helpers ----------
   async function loadProject(req, res) {
@@ -115,7 +143,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     }
     return true;
   }
-  const photoMeta = (p) => ({
+  const photoMeta = (p, base = '') => ({
     id: p.id,
     period: p.period,
     fileName: p.fileName,
@@ -129,7 +157,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     source: p.source,
     uploadedBy: p.uploadedBy,
     createdAt: p.createdAt,
-    url: `/api/photos/${p.id}`
+    url: `${base}/api/photos/${p.id}`
   });
   function projectSummary(p, snap) {
     return {
@@ -151,8 +179,8 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
 
   // ---------- meta, health ----------
   // Cloud Run reserves /healthz at its front end, so /health is the route to use on the deployed service.
-  app.get(['/healthz', '/health'], (req, res) => res.json({ ok: true }));
-  app.get('/api/meta', (req, res) =>
+  r.get(['/healthz', '/health'], (req, res) => res.json({ ok: true }));
+  r.get('/api/meta', (req, res) =>
     res.json({
       productName: PRODUCT_NAME,
       brand: BRAND,
@@ -172,7 +200,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
       reportKinds: Object.fromEntries(Object.entries(KINDS).map(([k, v]) => [k, v.name])),
       monitoringKinds: A.MONITORING_KINDS,
       // Only for the fictional demo: the seeded contractor links, so a visitor can try the contractor page.
-      demoContractorLinks: ['demo', 'reset'].includes(config.seed) && config.demoLogin ? DEMO_PROJECTS.map((p) => ({ projectId: p.id, name: p.name, link: `/c/${p.demoToken}` })) : []
+      demoContractorLinks: ['demo', 'reset'].includes(config.seed) && config.demoLogin ? DEMO_PROJECTS.map((p) => ({ projectId: p.id, name: p.name, link: `${req.base}/c/${p.demoToken}` })) : []
     })
   );
 
@@ -181,8 +209,8 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   const attempts = new Map();
   let allTries = [];
   const HOUR = 3600000;
-  app.post('/api/access', (req, res) => {
-    const ip = req.ip || 'x';
+  r.post('/api/access', (req, res) => {
+    const ip = req.clientIp;
     const now = Date.now();
     allTries = allTries.filter((t) => now - t < HOUR);
     for (const [k, v] of attempts) if (!v.some((t) => now - t < HOUR)) attempts.delete(k);
@@ -192,17 +220,17 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     allTries.push(now);
     attempts.set(ip, a);
     if (!workspaces.codeMatches((req.body || {}).code)) return res.status(403).json({ error: 'That code is not right.' });
-    workspaces.writeJudge(res, isSecure(req));
+    workspaces.writeJudge(res, isSecure(req), cookiePath(req));
     res.json({ ok: true, judge: true });
   });
 
   // ---------- auth ----------
-  app.get('/api/auth/demo-users', wrap(async (req, res) => {
+  r.get('/api/auth/demo-users', wrap(async (req, res) => {
     if (!config.demoLogin) return res.status(404).json({ error: 'Demo sign-in is off.' });
     const users = await store.find('users', {});
     res.json(users.sort((a, b) => a.id.localeCompare(b.id)).map((u) => ({ id: u.id, name: u.name, role: u.role, title: u.title, agency: u.agency || null })));
   }));
-  app.post('/api/auth/login', wrap(async (req, res) => {
+  r.post('/api/auth/login', wrap(async (req, res) => {
     if (!config.demoLogin) return res.status(404).json({ error: 'Demo sign-in is off.' });
     const u = await store.get('users', String((req.body || {}).userId || ''));
     if (!u) return res.status(400).json({ error: 'Pick a user.' });
@@ -211,14 +239,14 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     } catch (e) {
       return res.status(e.status || 500).json({ error: e.message });
     }
-    setSession(res, u, config, isSecure(req));
-    res.json({ id: u.id, name: u.name, role: u.role, home: `/${u.role}` });
+    setSession(res, u, config, isSecure(req), cookiePath(req));
+    res.json({ id: u.id, name: u.name, role: u.role, home: `${req.base}/${u.role}` });
   }));
-  app.post('/api/auth/logout', (req, res) => {
-    clearSession(res);
+  r.post('/api/auth/logout', (req, res) => {
+    clearSession(res, cookiePath(req));
     res.json({ ok: true });
   });
-  app.get('/api/auth/me', (req, res) => {
+  r.get('/api/auth/me', (req, res) => {
     if (!req.user) return res.status(401).json({ error: 'Not signed in.' });
     const u = req.user;
     res.json({ id: u.id, name: u.name, role: u.role, title: u.title, agency: u.agency || null });
@@ -226,12 +254,12 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
 
   // ---------- projects (engineer, reviewer, auditor) ----------
   const STAFF_READ = ['engineer', 'reviewer', 'auditor'];
-  app.get('/api/projects', allow(...STAFF_READ), wrap(async (req, res) => {
+  r.get('/api/projects', allow(...STAFF_READ), wrap(async (req, res) => {
     const { snaps } = await allSnapshots(store, today(), config.escalation);
     res.json(snaps.map((s) => ({ ...projectSummary(s.project, s), mine: s.project.inChargeId === req.user.id, canWrite: canWrite(req.user, s.project) })));
   }));
 
-  app.get('/api/projects/:id', allow(...STAFF_READ), wrap(async (req, res) => {
+  r.get('/api/projects/:id', allow(...STAFF_READ), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p) return;
     const users = await usersMap(store);
@@ -262,7 +290,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     });
   }));
 
-  app.get('/api/projects/:id/periods/:period', allow(...STAFF_READ), wrap(async (req, res) => {
+  r.get('/api/projects/:id/periods/:period', allow(...STAFF_READ), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p) return;
     const period = req.params.period;
@@ -296,7 +324,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
       claimsUpdatedBy: per.claimsUpdatedBy || null,
       percentComplete: per.percentComplete || null,
       narrativeOverride: per.narrativeOverride || '',
-      photos: photos.map(photoMeta),
+      photos: photos.map((ph) => photoMeta(ph, req.base)),
       check,
       flagNotes: per.flagNotes || [],
       submissions: subs.map((s) => ({ id: s.id, receivedAt: s.receivedAt, claims: s.claims, photoIds: s.photoIds, note: s.note })),
@@ -306,7 +334,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   }));
 
   // ---------- engineer work ----------
-  app.post('/api/projects/:id/periods/:period/photos', allow('engineer', 'reviewer'), uploadGate, upload.array('photos', 8), wrap(async (req, res) => {
+  r.post('/api/projects/:id/periods/:period/photos', allow('engineer', 'reviewer'), uploadGate, upload.array('photos', 8), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p || !requireWrite(req, res, p)) return;
     const stamps = [].concat((req.body && req.body.stampText) || []);
@@ -315,7 +343,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     if (!(await reservePhotoSlots(n))) return res.status(403).json({ error: photoLimitMsg });
     try {
       for (const [i, f] of (req.files || []).entries()) {
-        out.push(photoMeta(await A.addPhoto({ store, photoStore, project: p, period: req.params.period, buffer: f.buffer, fileName: f.originalname, contentType: f.mimetype, user: req.user, source: 'office', stampText: stamps[i] || stamps[0] || '' })));
+        out.push(photoMeta(await A.addPhoto({ store, photoStore, project: p, period: req.params.period, buffer: f.buffer, fileName: f.originalname, contentType: f.mimetype, user: req.user, source: 'office', stampText: stamps[i] || stamps[0] || '' }), req.base));
       }
     } catch (e) {
       await releasePhotoSlots(n - out.length);
@@ -325,7 +353,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     res.json({ photos: out });
   }));
 
-  app.patch('/api/photos/:photoId', allow('engineer', 'reviewer'), wrap(async (req, res) => {
+  r.patch('/api/photos/:photoId', allow('engineer', 'reviewer'), wrap(async (req, res) => {
     const ph = await store.get('photos', req.params.photoId);
     if (!ph) return res.status(404).json({ error: 'No such photo.' });
     const p = await store.get('projects', ph.projectId);
@@ -334,7 +362,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     res.json({ ok: true });
   }));
 
-  app.put('/api/projects/:id/periods/:period/claims', allow('engineer', 'reviewer'), wrap(async (req, res) => {
+  r.put('/api/projects/:id/periods/:period/claims', allow('engineer', 'reviewer'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p || !requireWrite(req, res, p)) return;
     try {
@@ -345,7 +373,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     }
   }));
 
-  app.post('/api/projects/:id/periods/:period/check', allow('engineer', 'reviewer'), wrap(async (req, res) => {
+  r.post('/api/projects/:id/periods/:period/check', allow('engineer', 'reviewer'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p || !requireWrite(req, res, p)) return;
     const per = await store.get('periods', periodId(p.id, req.params.period));
@@ -359,7 +387,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     res.json({ check });
   }));
 
-  app.put('/api/projects/:id/periods/:period/percent', allow('engineer'), wrap(async (req, res) => {
+  r.put('/api/projects/:id/periods/:period/percent', allow('engineer'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p || !requireWrite(req, res, p)) return;
     try {
@@ -379,14 +407,14 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     const monitoring = await store.find('monitoring', { projectId: p.id });
     return buildDrafts({ project: p, period: per, photos, effective: eff, monitoring, inChargeName: (users[p.inChargeId] || {}).name || 'Unassigned', today: today() });
   }
-  app.get('/api/projects/:id/periods/:period/reports', allow('engineer', 'reviewer'), wrap(async (req, res) => {
+  r.get('/api/projects/:id/periods/:period/reports', allow('engineer', 'reviewer'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p) return;
     const d = await draftsFor(p, req.params.period);
     if (!d) return res.status(400).json({ error: 'Enter the percent complete for this period first.' });
     res.json({ ...d, note: PHRASES.draftNotSent });
   }));
-  app.get('/api/projects/:id/periods/:period/reports/:file', allow('engineer', 'reviewer'), wrap(async (req, res) => {
+  r.get('/api/projects/:id/periods/:period/reports/:file', allow('engineer', 'reviewer'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p) return;
     const m = String(req.params.file).match(/^([A-Z_]+)\.(txt|csv|html)$/);
@@ -403,7 +431,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     res.type(m[2] === 'csv' ? 'text/csv' : 'text/plain').send(m[2] === 'csv' ? toCsv(draft, d.fictional) : toText(draft, d.fictional));
   }));
 
-  app.post('/api/projects/:id/transmittals', allow('engineer', 'reviewer'), uploadGate, upload.single('photo'), wrap(async (req, res) => {
+  r.post('/api/projects/:id/transmittals', allow('engineer', 'reviewer'), uploadGate, upload.single('photo'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p || !requireWrite(req, res, p)) return;
     const n = req.file ? 1 : 0;
@@ -417,13 +445,13 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
       sendErr(res, e);
     }
   }));
-  app.get('/api/projects/:id/transmittals', allow(...STAFF_READ), wrap(async (req, res) => {
+  r.get('/api/projects/:id/transmittals', allow(...STAFF_READ), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p) return;
     res.json((await store.find('transmittals', { projectId: p.id })).sort((a, b) => b.submittedOn.localeCompare(a.submittedOn)));
   }));
 
-  app.post('/api/projects/:id/monitoring', allow('engineer', 'reviewer'), wrap(async (req, res) => {
+  r.post('/api/projects/:id/monitoring', allow('engineer', 'reviewer'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p || !requireWrite(req, res, p)) return;
     try {
@@ -434,16 +462,16 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   }));
 
   // A new contractor link. The token is shown once; only its hash is kept. The old link stops working.
-  app.post('/api/projects/:id/contractor-link', allow('engineer'), wrap(async (req, res) => {
+  r.post('/api/projects/:id/contractor-link', allow('engineer'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p || !requireWrite(req, res, p)) return;
     const token = newToken();
     await store.update('projects', p.id, { contractorTokenHash: hashToken(token), contractorLinkCreatedAt: new Date().toISOString() });
-    res.json({ link: `/c/${token}`, note: 'Copy this link now. It is not shown again. You send it to the contractor yourself.' });
+    res.json({ link: `${req.base}/c/${token}`, note: 'Copy this link now. It is not shown again. You send it to the contractor yourself.' });
   }));
 
   // A plain-language note drafted by Gemini from the decision log only. Nothing is sent; a person edits it.
-  app.post('/api/projects/:id/periods/:period/draft-note', allow('engineer', 'reviewer'), wrap(async (req, res) => {
+  r.post('/api/projects/:id/periods/:period/draft-note', allow('engineer', 'reviewer'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p) return;
     try {
@@ -457,7 +485,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   // ---------- reviewer ----------
   // The engineer in charge has the last word on each line; the office head (reviewer) can overrule.
   // Every decision is appended to the log, so both the AI default and each person's call are kept.
-  app.post('/api/projects/:id/periods/:period/decisions', allow('engineer', 'reviewer'), wrap(async (req, res) => {
+  r.post('/api/projects/:id/periods/:period/decisions', allow('engineer', 'reviewer'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p || !requireWrite(req, res, p)) return;
     try {
@@ -469,7 +497,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
       sendErr(res, e);
     }
   }));
-  app.post('/api/projects/:id/periods/:period/flag-notes', allow('reviewer'), wrap(async (req, res) => {
+  r.post('/api/projects/:id/periods/:period/flag-notes', allow('reviewer'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p) return;
     try {
@@ -480,7 +508,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     }
   }));
 
-  app.get('/api/review/monday', allow('reviewer'), wrap(async (req, res) => {
+  r.get('/api/review/monday', allow('reviewer'), wrap(async (req, res) => {
     const t = today();
     const { snaps, users } = await allSnapshots(store, t, config.escalation);
     const wk = weekRange(t);
@@ -518,7 +546,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     });
   }));
 
-  app.get('/api/review/queue', allow('reviewer'), wrap(async (req, res) => {
+  r.get('/api/review/queue', allow('reviewer'), wrap(async (req, res) => {
     const { snaps } = await allSnapshots(store, today(), config.escalation);
     const out = [];
     for (const s of snaps)
@@ -529,13 +557,13 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     res.json(out.sort((a, b) => b.period.localeCompare(a.period)));
   }));
 
-  app.get('/api/review/overrides', allow('reviewer', 'auditor'), wrap(async (req, res) => {
+  r.get('/api/review/overrides', allow('reviewer', 'auditor'), wrap(async (req, res) => {
     const ds = (await store.find('decisions', {})).filter((d) => d.kind === 'line' && (d.overrode || d.readersDisagreed));
     res.json(ds.sort((a, b) => b.at.localeCompare(a.at)));
   }));
 
   // ---------- mayor: escalated items only ----------
-  app.get('/api/mayor/escalations', allow('mayor'), wrap(async (req, res) => {
+  r.get('/api/mayor/escalations', allow('mayor'), wrap(async (req, res) => {
     const { snaps } = await allSnapshots(store, today(), config.escalation);
     const items = snaps.flatMap((s) => s.items.filter((i) => i.level >= 2)).map((i) => ({ projectName: i.projectName, kind: i.kind, plain: i.plain, personInCharge: i.inCharge }));
     res.json({ today: today(), escalated: items.length, gauge: items.length === 0 ? 'dark' : items.length < 3 ? 'amber' : 'red', items });
@@ -560,16 +588,16 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
       monitoring: monitoring.sort((a, b) => b.date.localeCompare(a.date))
     };
   }
-  app.get('/api/audit/projects', allow('auditor', 'reviewer'), wrap(async (req, res) => {
+  r.get('/api/audit/projects', allow('auditor', 'reviewer'), wrap(async (req, res) => {
     const ps = await store.find('projects', {});
     res.json(ps.sort((a, b) => a.id.localeCompare(b.id)).map((p) => ({ id: p.id, name: p.name, contractId: p.contractId })));
   }));
-  app.get('/api/audit/projects/:id/log', allow('auditor', 'reviewer'), wrap(async (req, res) => {
+  r.get('/api/audit/projects/:id/log', allow('auditor', 'reviewer'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p) return;
     res.json(await auditLog(p));
   }));
-  app.get('/api/audit/projects/:id/log.csv', allow('auditor', 'reviewer'), wrap(async (req, res) => {
+  r.get('/api/audit/projects/:id/log.csv', allow('auditor', 'reviewer'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p) return;
     const L = await auditLog(p);
@@ -585,7 +613,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   }));
 
   // ---------- photos ----------
-  app.get('/api/photos/:photoId', allow(...STAFF_READ), wrap(async (req, res) => {
+  r.get('/api/photos/:photoId', allow(...STAFF_READ), wrap(async (req, res) => {
     const ph = await store.get('photos', req.params.photoId);
     if (!ph) return res.status(404).json({ error: 'No such photo.' });
     const got = await photoStore.get(ph.storageKey);
@@ -609,7 +637,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     return ps[0];
   }
   // What the contractor sees: their project, the lines, and the status of what they sent. Never verdicts.
-  app.get('/api/contractor/:token', wrap(async (req, res) => {
+  r.get('/api/contractor/:token', wrap(async (req, res) => {
     const p = await projectByToken(req, res);
     if (!p) return;
     const subs = (await store.find('submissions', { projectId: p.id })).filter((s) => s.source === 'contractor').sort((a, b) => b.receivedAt.localeCompare(a.receivedAt));
@@ -634,7 +662,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   const contractorGate = wrap(async (req, res, next) => {
     if (await projectByToken(req, res)) next();
   });
-  app.post('/api/contractor/:token/submissions', contractorGate, uploadGate, upload.array('photos', 8), wrap(async (req, res) => {
+  r.post('/api/contractor/:token/submissions', contractorGate, uploadGate, upload.array('photos', 8), wrap(async (req, res) => {
     // Everything is checked against the seeded project first; only a valid submission gets a copy.
     let claims = [];
     try {
@@ -674,18 +702,18 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     const { latestPercent } = require('./domain/progress');
     return { note: publicNote({ project: p, periods, effective: eff, latest: latestPercent(periods) }), periods, eff, p };
   }
-  app.get('/api/public/projects', wrap(async (req, res) => {
+  r.get('/api/public/projects', wrap(async (req, res) => {
     const ps = await store.find('projects', {});
     const out = [];
     for (const p of ps.sort((a, b) => a.id.localeCompare(b.id))) out.push((await publicFor(p.id)).note);
     res.json(out);
   }));
-  app.get('/api/public/projects/:id', wrap(async (req, res) => {
+  r.get('/api/public/projects/:id', wrap(async (req, res) => {
     const r = await publicFor(req.params.id);
     if (!r) return res.status(404).json({ error: 'No such project.' });
     res.json(r.note);
   }));
-  app.get('/api/public/projects/:id/photo', wrap(async (req, res) => {
+  r.get('/api/public/projects/:id/photo', wrap(async (req, res) => {
     const r = await publicFor(req.params.id);
     if (!r) return res.status(404).end();
     const per = r.periods.filter((x) => x.check && x.check.photoIds && x.check.photoIds.length && x.check.lines.some((l) => r.eff.has(`${x.period}|${l.lineKey}`))).sort((a, b) => b.period.localeCompare(a.period))[0];
@@ -697,13 +725,13 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   }));
 
   // ---------- owner view and schedule trajectory (src/routes/owner.js) ----------
-  require('./routes/owner')(app, { store, allow, wrap, today, config });
-  require('./routes/translate')(app, { store, rootStore, wrap, config, spend, publicFor: (id) => publicFor(id) });
-  require('./routes/analytics')(app, { allow, wrap, config, analytics });
+  require('./routes/owner')(r, { store, allow, wrap, today, config });
+  require('./routes/translate')(r, { store, rootStore, wrap, config, spend, publicFor: (id) => publicFor(id) });
+  require('./routes/analytics')(r, { allow, wrap, config, analytics });
 
   // ---------- test support (off unless ALLOW_TEST_RESET=1) ----------
   if (config.allowTestReset) {
-    app.post('/api/test/reset', wrap(async (req, res) => {
+    r.post('/api/test/reset', wrap(async (req, res) => {
       await reseed();
       res.json({ ok: true });
     }));
@@ -714,29 +742,40 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     const raw = fs.readFileSync(path.join(PUBLIC_DIR, file), 'utf8');
     return raw.replace(/\{\{PRODUCT_NAME\}\}/g, PRODUCT_NAME).replace(/\{\{BRAND_DISPLAY\}\}/g, BRAND_DISPLAY).replace(/\{\{BRAND\}\}/g, BRAND);
   };
-  const sendPage = (res, file) => res.type('html').send(page(file));
-  app.use('/static', express.static(path.join(PUBLIC_DIR, 'static'), { maxAge: '5m' }));
-  app.get('/', (req, res) => (req.user ? res.redirect(`/${req.user.role}`) : sendPage(res, 'login.html')));
+  // {{BASE}} in a page is the prefix this request came in under ('' or /builderscup).
+  const sendPage = (req, res, file) => res.type('html').send(page(file).replace(/\{\{BASE\}\}/g, req.base));
+  r.use('/static', express.static(path.join(PUBLIC_DIR, 'static'), { maxAge: '5m' }));
+  r.get('/', (req, res) => (req.user ? res.redirect(`${req.base}/${req.user.role}`) : sendPage(req, res, 'login.html')));
   for (const role of ['engineer', 'reviewer', 'mayor', 'auditor']) {
-    app.get(`/${role}`, (req, res) => {
-      if (!req.user || req.user.role !== role) return res.redirect('/');
-      sendPage(res, `${role}.html`);
+    r.get(`/${role}`, (req, res) => {
+      if (!req.user || req.user.role !== role) return res.redirect(`${req.base}/`);
+      sendPage(req, res, `${role}.html`);
     });
   }
-  app.get('/c/:token', (req, res) => sendPage(res, 'contractor.html'));
-  app.get(['/public', '/public/:id'], (req, res) => sendPage(res, 'public.html'));
+  r.get('/c/:token', (req, res) => sendPage(req, res, 'contractor.html'));
+  r.get(['/public', '/public/:id'], (req, res) => sendPage(req, res, 'public.html'));
 
   // ---------- errors ----------
-  app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
+  r.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
   // eslint-disable-next-line no-unused-vars
-  app.use((err, req, res, next) => {
+  const onError = (err, req, res, next) => {
     if (err instanceof multer.MulterError) return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? `Photos must be under ${config.maxUploadMb} MB.` : 'Upload problem.' });
     if (err instanceof A.UserError) return res.status(err.status).json({ error: err.message });
     if (err.code === 'TEMPLATE_READONLY') return res.status(403).json({ error: err.message });
     if (err.type === 'entity.parse.failed') return res.status(400).json({ error: 'Request body is not valid JSON.' });
     console.error(err);
     res.status(500).json({ error: neutralize('Something went wrong on the server.') });
-  });
+  };
+  r.use(onError);
+
+  if (config.basePath) {
+    app.use(config.basePath, r);
+    // Anything under the prefix that the app does not know ends here, not in the root mount.
+    app.use(config.basePath, (req, res) => res.status(404).type('text').send('Not found.'));
+  }
+  app.use(r);
+  // Errors raised before the router runs (for example a request body that is not valid JSON).
+  app.use(onError);
   return app;
 }
 

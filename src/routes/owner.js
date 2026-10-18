@@ -78,7 +78,7 @@ module.exports = function registerOwnerRoutes(app, { store, allow, wrap, today, 
         planned: plannedAt(project, monthEnd(m)),
         office: hist ? hist.value : null,
         checked: checked.some((p) => p.period === m),
-        photo: lastPhoto ? { id: lastPhoto.id, period: lastPhoto.period, url: `/api/photos/${lastPhoto.id}`, own: lastPhoto.period === m } : null,
+        photo: lastPhoto ? { id: lastPhoto.id, period: lastPhoto.period, url: `${req.base || ''}/api/photos/${lastPhoto.id}`, own: lastPhoto.period === m } : null,
         lines: JSON.parse(JSON.stringify(state))
       };
     });
@@ -95,7 +95,7 @@ module.exports = function registerOwnerRoutes(app, { store, allow, wrap, today, 
       overlay: {
         period: latestChecked ? latestChecked.period : null,
         label: latestChecked ? monthName(`${latestChecked.period}-01`) : null,
-        photo: latestPhoto ? { id: latestPhoto.id, period: latestPhoto.period, url: `/api/photos/${latestPhoto.id}`, stampText: latestPhoto.stampText || null } : null,
+        photo: latestPhoto ? { id: latestPhoto.id, period: latestPhoto.period, url: `${req.base || ''}/api/photos/${latestPhoto.id}`, stampText: latestPhoto.stampText || null } : null,
         plannedNow: latestChecked ? plannedAt(project, monthEnd(latestChecked.period)) : null,
         officeNow: trajectory.ok ? trajectory.actual : null,
         officePeriod: trajectory.ok ? trajectory.latestPeriod : null,

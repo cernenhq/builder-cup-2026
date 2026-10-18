@@ -300,6 +300,18 @@ Notes:
 - The daily cap (`DAILY_CAP_USD`, US$3) is an estimate, not a limit on the cloud account: also set a budget alert in the Google Cloud console. The Flash 3.8 price is not yet confirmed on Google's price page, so `src/ai/spend.js` prices it conservatively (US$1.50 per million input tokens, US$7.50 per million output tokens, thinking included). Each live call is bounded (`src/ai/gemini.js`): at most 4 photos, 20 claimed lines, and an output-token limit of 15,000 per reader call and 2,000 per draft, thinking included. Requests over the size limits (each claimed line and question under 300 characters, prompt under 24,000 bytes) are refused before anything is reserved. Before it starts, each call reserves its largest possible cost at the model's rates: input counted as one token per UTF-8 byte of prompt and response schema (a tokenizer never needs more), plus 2,000 tokens per photo (Google documents 1,120 for Gemini 3 at the default media resolution), plus the whole output limit. The largest a reader call can reserve is under US$0.17. The reservation is a transaction on the shared daily ledger in Firestore, so separate instances (for example two revisions during a rollout) cannot both pass the cap. If the cap has no room, or the ledger cannot be written, the call does not run. A call that fails or times out keeps its reservation as spent, and a reservation left open by a crash stays counted.
 - Never run `SEED=reset` against a real database: it deletes and reseeds.
 
+### Serving it at cernen.com/builderscup
+
+`BASE_PATH=/builderscup` makes the service answer under that path as well as at its own root, so `cernen.com/builderscup/…` can be passed through unchanged by the proxy in the cernen.com site repo (`builderscup-proxy/`). Pages, API calls, photo and download links, redirects and cookie paths are all built from the path the request came in on, so a visitor stays on the address they used. Every answer except `/static/` files and photos carries `Cache-Control: no-store`. `PROXY_SECRET` (Secret Manager `pop-proxy-secret`) is shared with that proxy: only requests carrying it may name the visitor's address (`x-cernen-client-ip`) for the judge-code rate limit; without it, the header is ignored.
+
+```
+bash deploy/cernen-path.sh                                   # dry run
+APPLY=1 bash deploy/cernen-path.sh                           # second service proof-of-progress-cernen (default)
+SERVICE=proof-of-progress APPLY=1 bash deploy/cernen-path.sh # or the main service itself
+```
+
+The second service shares the project's Firestore data, bucket, secrets and daily cap. Run both on the same seed files (`src/seed/*`), since they share the seeded demo copy. Tests for the set-up: `test/api/basepath.test.js`, and the browser tests through the proxy with `E2E_FRONTDOOR=<site repo>/tools/local-frontdoor.js bash scripts/test-all.sh` (step 4b).
+
 ## Mock vs real
 
 | Part | In this repo | Real |

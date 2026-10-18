@@ -60,13 +60,15 @@ function authMiddleware({ config, store }) {
   };
 }
 
-function setSession(res, user, config, secure) {
+// cookiePath is the path the app is served under ('/' on its own host, '/builderscup' behind cernen.com),
+// so the session cookie is sent only to this app.
+function setSession(res, user, config, secure, cookiePath = '/') {
   const exp = Date.now() + config.sessionHours * 3600 * 1000;
   const tok = sign({ uid: user.id, role: user.role, exp }, config.sessionSecret);
-  res.append('Set-Cookie', `${COOKIE}=${tok}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${config.sessionHours * 3600}${secure ? '; Secure' : ''}`);
+  res.append('Set-Cookie', `${COOKIE}=${tok}; Path=${cookiePath}; HttpOnly; SameSite=Lax; Max-Age=${config.sessionHours * 3600}${secure ? '; Secure' : ''}`);
 }
-function clearSession(res) {
-  res.append('Set-Cookie', `${COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
+function clearSession(res, cookiePath = '/') {
+  res.append('Set-Cookie', `${COOKIE}=; Path=${cookiePath}; HttpOnly; SameSite=Lax; Max-Age=0`);
 }
 
 // Route guard. Usage: allow('engineer', 'reviewer').

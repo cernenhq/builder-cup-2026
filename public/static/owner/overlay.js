@@ -45,7 +45,7 @@
     if (!threeLoading)
       threeLoading = new Promise((resolve) => {
         const s = document.createElement('script');
-        s.src = '/static/owner/three.min.js';
+        s.src = PoP.url('/static/owner/three.min.js');
         s.onload = () => resolve(!!window.THREE);
         s.onerror = () => resolve(false);
         document.head.appendChild(s);

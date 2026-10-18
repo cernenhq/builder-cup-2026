@@ -219,7 +219,7 @@
           .map(
             (d) => `<div class="draft" data-testid="draft-${esc(d.kind)}"><div class="small">${esc(d.agency)}</div><h3>${esc(d.name)}</h3><div class="small">${esc(d.periodLabel)} · due ${esc(fmtDate(d.due))}</div>
             <div class="pct" data-testid="draft-pct">${esc(d.percent)}%</div>${d.narrative ? `<p class="mini" data-testid="narrative">${esc(d.narrative)}</p>` : ''}
-            <div class="row"><a class="btn" href="/api/projects/${esc(S.pid)}/periods/${esc(S.period)}/reports/${esc(d.kind)}.txt">Text</a><a class="btn" href="/api/projects/${esc(S.pid)}/periods/${esc(S.period)}/reports/${esc(d.kind)}.csv">CSV</a><a class="btn" target="_blank" rel="noopener" href="/api/projects/${esc(S.pid)}/periods/${esc(S.period)}/reports/${esc(d.kind)}.html">Printable</a></div></div>`
+            <div class="row"><a class="btn" href="${esc(PoP.base)}/api/projects/${esc(S.pid)}/periods/${esc(S.period)}/reports/${esc(d.kind)}.txt">Text</a><a class="btn" href="${esc(PoP.base)}/api/projects/${esc(S.pid)}/periods/${esc(S.period)}/reports/${esc(d.kind)}.csv">CSV</a><a class="btn" target="_blank" rel="noopener" href="${esc(PoP.base)}/api/projects/${esc(S.pid)}/periods/${esc(S.period)}/reports/${esc(d.kind)}.html">Printable</a></div></div>`
           )
           .join('')}</div><p class="small">${esc(S.drafts.note)} You submit each one yourself, then log it below.</p>`
       : '<p class="small">Enter the percent complete to make the four drafts.</p>';
@@ -255,7 +255,7 @@
     let r;
     let data = null;
     try {
-      r = await fetch(`/api/projects/${S.pid}/periods/${S.period}/draft-note`, { method: 'POST', headers: { 'x-pop-request': '1', 'content-type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ audience }) });
+      r = await fetch(PoP.url(`/api/projects/${S.pid}/periods/${S.period}/draft-note`), { method: 'POST', headers: { 'x-pop-request': '1', 'content-type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ audience }) });
       try {
         data = await r.json();
       } catch (e) {

@@ -29,7 +29,7 @@
     <section class="section grid cols-2">
       <div class="card"><h2>Contractor</h2><p class="small">Contractors do not sign in. Each project has its own link, which the office sends them. The demo links:</p>
         <ul>${meta.demoContractorLinks.map((l) => `<li><a href="${esc(l.link)}" data-testid="contractor-link-${esc(l.projectId)}">${esc(l.name)}</a></li>`).join('')}</ul></div>
-      <div class="card"><h2>Public</h2><p class="small">Anyone can read a plain progress note per project.</p><a class="btn" href="/public">Open the public page</a></div>
+      <div class="card"><h2>Public</h2><p class="small">Anyone can read a plain progress note per project.</p><a class="btn" href="${esc(PoP.base)}/public">Open the public page</a></div>
     </section>
     ${meta.access && meta.access.liveAi ? `<section class="section card" data-testid="judge-access">
       <h2>Judges and organisers</h2>

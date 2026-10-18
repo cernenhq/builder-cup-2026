@@ -46,6 +46,15 @@ fi
 echo "== 4/5 browser tests (Playwright), in-memory store"
 env -u FIRESTORE_EMULATOR_HOST STORE=memory npx playwright test
 
+# The cernen.com set-up: the same browser tests through the cernen.com stand-in and proxy, with the
+# app under /builderscup. Needs the site repo's tools/local-frontdoor.js (E2E_FRONTDOOR).
+if [ -n "${E2E_FRONTDOOR:-}" ]; then
+  echo "== 4b browser tests under /builderscup through the cernen.com proxy"
+  env -u FIRESTORE_EMULATOR_HOST STORE=memory E2E_PORT=8121 E2E_PREFIX=/builderscup npx playwright test --reporter=list
+else
+  echo "== 4b SKIPPED: set E2E_FRONTDOOR=<site repo>/tools/local-frontdoor.js to test the /builderscup set-up"
+fi
+
 if [ "$FS_OK" = 1 ]; then
   echo "== 5/5 browser tests (Playwright), Firestore emulator"
   STORE=firestore FIRESTORE_PROJECT_ID=demo-proof-of-progress GOOGLE_CLOUD_PROJECT=demo-proof-of-progress E2E_PORT=8093 npx playwright test --reporter=list

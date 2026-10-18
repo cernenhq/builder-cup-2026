@@ -34,7 +34,7 @@ module.exports = function registerProtoGemini(app, { wrap, config, spend }) {
 
   app.post('/api/proto/gemini', wrap(async (req, res) => {
     if (config.ai === 'mock' || !config.gcpProject) return res.status(503).json({ error: { message: 'Live Gemini is off on this deployment. The prototype replays recorded results.' } });
-    if (!req.judgeCode) return res.status(403).json({ error: { message: 'Live Gemini needs the judge access code: enter it on the sign-in page (Judges and organisers), then come back.' } });
+    if (!req.judgeCode) return res.status(403).json({ error: { message: config.openLive ? "The prototype's live buttons need an access code. Live Gemini is on in the app itself: sign in as the engineer and run the check on a new photo." : 'Live Gemini needs the judge access code: enter it on the sign-in page (Judges and organisers), then come back.' } });
     const b = req.body || {};
     const kind = String(b.kind || '');
     const k = KINDS[kind];

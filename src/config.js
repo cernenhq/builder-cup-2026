@@ -49,6 +49,8 @@ function loadConfig(env = process.env) {
     // Pinned so results are repeatable and the model named on screen is the one called.
     geminiModel: env.GEMINI_MODEL || 'gemini-3.8-flash',
     geminiModelB: env.GEMINI_MODEL_B || '',
+    // Image model for the prototype's AI finished look (Vertex AI); empty turns that one feature off.
+    imageModel: env.IMAGE_MODEL || '',
     // Live model calls need the judge access code (Secret Manager on Cloud Run) and stay under a daily cap.
     judgeCode: env.JUDGE_CODE || '',
     dailyCapUsd: num(env.DAILY_CAP_USD, 3),

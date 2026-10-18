@@ -229,7 +229,7 @@ body.demo nav{opacity:.35}
 <header><div class="hwrap">
  <div class="brand">Cernen <i>Proof of Progress</i></div>
  <div class="roles" id="roles"></div>
- <span class="badge">Interactive prototype · recorded results · live checks run in the workbench</span>
+ <span class="badge">Interactive prototype · recorded results; live Gemini with the judge access code</span>
  <div class="hctl"><div class="seg" id="themeSeg"><button data-t="blueprint" class="on">Blueprint</button><button data-t="light">Paper</button></div>
   <button class="btn" id="safeBtn" title="Blur street, hoarding and vehicles, and hide internal views, before you record or share">Share-safe off</button>
   <button class="btn primary" id="demoBtn">Play the story</button></div>
@@ -1917,29 +1917,17 @@ function winExtra(){}
 
 // ================= GEMINI (live, optional) =================
 // Key stays in this page's memory unless you tick "remember". Calls go straight from the browser to Google.
-const GEM = {key:'', model:'', imageModel:'', models:[], log:[]};
-try{const k=localStorage.getItem('n1_gem_key'); if(k){GEM.key=k;} const m=JSON.parse(localStorage.getItem('n1_gem_models')||'null'); if(m){GEM.model=m.model;GEM.imageModel=m.imageModel;}}catch(e){}
-const GBASE='https://generativelanguage.googleapis.com/v1beta';
-async function gemListModels(){
-  const r=await fetch(`${GBASE}/models?pageSize=200&key=${encodeURIComponent(GEM.key)}`); const j=await r.json();
-  if(!r.ok) throw new Error(j.error?.message||r.statusText);
-  GEM.models=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace('models/',''));
-  const pick=(f)=>GEM.models.filter(f).sort().reverse()[0];
-  const pref=['gemini-3.8-flash','gemini-4-argon','gemini-3.6-flash'].find(n=>GEM.models.includes(n));
-  if(!GEM.model||!GEM.models.includes(GEM.model)) GEM.model=pref||pick(n=>/gemini-.*flash/.test(n)&&!/image|tts|audio|live|lite/.test(n))||pick(n=>/gemini-.*pro/.test(n)&&!/image|tts|audio|live/.test(n))||pick(n=>/gemini-.*flash/.test(n)&&!/image|tts|audio|live|lite/.test(n))||GEM.models[0];
-  const ipref=['gemini-3-pro-image','gemini-nano-banana-2.1','gemini-3.1-flash-image'].find(n=>GEM.models.includes(n));
-  if(!GEM.imageModel||!GEM.models.includes(GEM.imageModel)) GEM.imageModel=ipref||pick(n=>/image/.test(n)&&/gemini/.test(n))||'';
-  return GEM.models;
-}
+const GEM = {key:'server', model:'gemini-3.8-flash', imageModel:'gemini-3.1-flash-image', models:['gemini-3.8-flash','gemini-3.1-flash-image'], log:[]};
+// Live calls go to the app's server (Vertex AI, no key in the browser), which needs the judge access code.
+const POP_BASE = location.pathname.replace(/\/prototype\/?$/, '');
+async function gemListModels(){ return GEM.models; }
 function b64of(dataURL){const i=dataURL.indexOf(',');return {mime:dataURL.slice(5,dataURL.indexOf(';')),data:dataURL.slice(i+1)};}
 async function gemCall(model,parts,gen={},kind='call'){
-  if(!GEM.key) throw new Error('Add a Gemini API key in the Gemini panel first.');
   const t0=performance.now();
-  const r=await fetch(`${GBASE}/models/${model}:generateContent?key=${encodeURIComponent(GEM.key)}`,{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:gen})});
-  const j=await r.json(); const ms=Math.round(performance.now()-t0);
-  GEM.log.push({at:new Date().toISOString().slice(11,19),kind,model,ok:r.ok,ms,usage:j.usageMetadata||null,err:r.ok?null:(j.error?.message||r.statusText)});
-  if(!r.ok) throw new Error(j.error?.message||r.statusText);
+  const r=await fetch(POP_BASE+'/api/proto/gemini',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','x-pop-request':'1'},body:JSON.stringify({kind,parts,gen})});
+  const j=await r.json().catch(()=>({})); const ms=Math.round(performance.now()-t0);
+  GEM.log.push({at:new Date().toISOString().slice(11,19),kind,model:j.model||model,ok:r.ok,ms,usage:j.usageMetadata||null,err:r.ok?null:((j.error&&j.error.message)||r.statusText)});
+  if(!r.ok) throw new Error((j.error&&j.error.message)||r.statusText);
   return j;
 }
 function gemText(j){return (j.candidates?.[0]?.content?.parts||[]).filter(p=>p.text).map(p=>p.text).join('');}
@@ -2652,7 +2640,7 @@ function setSafe(on){SAFE=on;LS.set('n1_safe',on);
  const src=on?IMGS_PUB:IMGS_ORIG; Object.keys(src).forEach(k=>{IMGS[k]=src[k];imgs[k].src=src[k];});
  const ls=on?LIVE_PUB:LIVE_ORIG; ls.forEach((v,i)=>LIVE[i]=v);
  $('#safeBtn').classList.toggle('on',on); $('#safeBtn').innerHTML=on?ic('eye',14)+' Share-safe on':ic('eye',14)+' Share-safe off';
- $('.badge').textContent=on?'Share-safe · street, hoarding and vehicles blurred · internal views hidden':'Interactive prototype · recorded results · live checks run in the workbench';
+ $('.badge').textContent=on?'Share-safe · street, hoarding and vehicles blurred · internal views hidden':'Interactive prototype · recorded results; live Gemini with the judge access code';
  $('.badge').style.color=on?'var(--sup)':'var(--s-keep)';
  if(on&&VIEWS.find(v=>v.k===VIEW)?.internal)go('overview'); else {renderNav(); go(VIEW);} }
 

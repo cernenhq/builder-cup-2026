@@ -743,6 +743,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     res.sendFile(path.join(PUBLIC_DIR, 'prototype.html'));
   });
   require('./routes/insight')(r, { allow, wrap, config, spend, sendPage: (...a) => sendPage(...a) });
+  require('./routes/protogem')(r, { wrap, config, spend });
   require('./routes/translate')(r, { store, rootStore, wrap, config, spend, publicFor: (id) => publicFor(id) });
   require('./routes/analytics')(r, { allow, wrap, config, analytics });
 

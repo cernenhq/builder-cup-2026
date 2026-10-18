@@ -639,7 +639,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
     }
     const ps = await store.find('projects', { contractorTokenHash: hashToken(tok) });
     if (!ps.length) {
-      res.status(404).json({ error: 'This link is not valid or has been replaced. Ask the municipal engineering office for a new one.' });
+      res.status(404).json({ error: 'This link is not valid or has been replaced. Ask the engineering office for a new one.' });
       return null;
     }
     return ps[0];

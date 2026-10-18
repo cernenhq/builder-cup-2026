@@ -6,7 +6,7 @@
   const id = location.pathname.slice(PoP.base.length).split('/')[2];
   if (!id) {
     const list = await api('/api/public/projects');
-    main.innerHTML = `<div class="pub"><h1 class="section">Project progress</h1><p class="small">Notes from the Municipal Engineering Office, based on site photos the office has looked at.</p>${list
+    main.innerHTML = `<div class="pub"><h1 class="section">Project progress</h1><p class="small">Notes from the engineering office, based on site photos the office has looked at.</p>${list
       .map((n) => `<div class="card section"><h2><a href="${esc(PoP.base)}/public/${esc(n.projectId)}">${esc(n.name)}</a></h2><div class="small">${esc(n.location)}</div><p>${n.percent ? `Reported ${esc(n.percent.value)}% complete as of ${esc(n.percent.asOf)}.` : 'No progress reported yet.'}</p></div>`)
       .join('')}</div>`;
     return;

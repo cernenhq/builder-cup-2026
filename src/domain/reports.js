@@ -66,7 +66,7 @@ function buildDrafts({ project, period, photos, effective, monitoring, inChargeN
     ['Contract ID', project.contractId],
     ['Location', project.location],
     ['Contractor', project.contractor],
-    ['Person in charge (MEO)', inChargeName],
+    ['Person in charge (engineering office)', inChargeName],
     ['Reporting period', monthLabel(period.period)],
     ['Percent complete (entered once by the office)', `${pct}%`],
     ['Entered by', `${pc.enteredByName} on ${pc.enteredAt.slice(0, 10)}`]

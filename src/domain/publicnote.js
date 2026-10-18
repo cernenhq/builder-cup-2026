@@ -48,7 +48,7 @@ function publicNote({ project, periods, effective, latest }) {
     photosShow: shows.map(({ text, month }) => ({ text, month })),
     notVisible,
     explainer: PHRASES.publicDisclaimer,
-    source: 'Municipal Engineering Office'
+    source: 'engineering office'
   };
 }
 

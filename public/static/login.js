@@ -1,6 +1,6 @@
 (async function () {
   const { esc, api, header } = window.PoP;
-  const { meta } = await header({ subtitle: 'Municipal Engineering Office' });
+  const { meta } = await header({ subtitle: 'Engineering office, owner and lender' });
   const main = document.getElementById('main');
   // Whoever releases the money comes first, then the LGU official, then the office that does the work.
   const LABEL = {

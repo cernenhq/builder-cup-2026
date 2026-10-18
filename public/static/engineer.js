@@ -271,7 +271,7 @@
 
   // Long-cut beat: Gemini drafts a plain-language note from the decision log only. A person edits it
   // and sends it; nothing goes out automatically.
-  const AUDIENCES = { office: 'Office (municipal engineering)', mayor: 'Mayor', public: 'Public' };
+  const AUDIENCES = { office: 'Office (engineering)', mayor: 'Mayor', public: 'Public' };
   function noteLabel(n) {
     if (!n) return 'Draft from the decision log only. Nothing is sent.';
     return n.saved ? `Saved Gemini draft from ${fmtTime(n.at)}, model ${n.model}. From the decision log only; nothing is sent.` : `Gemini draft, model ${n.model}, ${fmtTime(n.at)}. From the decision log only; nothing is sent.`;

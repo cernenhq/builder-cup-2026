@@ -1,6 +1,6 @@
 # Proof of Progress (Cernen&trade;)
 
-A tool for a municipal engineering office (MEO). Each month a contractor claims percent complete per line item (the progress claim; in the demo, a fictional statement of work accomplished). The office checks each line against milestone photos, enters the project's percent complete once, and gets drafts of the four reports it owes (COA, DILG SubayBAYAN, IAS, MPDO) from that single entry. It logs when each report was actually submitted, flags late ones, and gives the office head a Monday view and the mayor a screen of escalated items only.
+Proof of Progress checks a contractor's monthly progress claim against site photos, line by line. It is built for the engineering office that reviews the works (in the demo, a fictional LGU office), and gives owners, lenders and developers a read-only view of the same record. Each month a contractor claims percent complete per line item (the progress claim; in the demo, a fictional statement of work accomplished). The office checks each line against milestone photos, enters the project's percent complete once, and gets drafts of the four reports it owes (COA, DILG SubayBAYAN, IAS, MPDO) from that single entry. It logs when each report was actually submitted, flags late ones, and gives the office head a Monday view and the mayor a screen of escalated items only.
 
 The product name and brand come from one file, `src/brand.js` (`PRODUCT_NAME`, `BRAND`). Rename there and every page, report draft and API response follows.
 
@@ -105,7 +105,7 @@ Every row is an automated test that signs in as that role and does the job in a 
 | Mayor | One screen, only escalated items, in plain words | Mayor screen: gauge plus escalated items; office-only (yellow) items absent; no inputs | M1 | PASS |
 | Mayor | An item leaves the screen when the office acts | Office logs the overdue DILG report; mayor sees one item fewer | M2 | PASS |
 | Contractor | Submit the progress claim and photos through the project link; see status, never verdicts | /c/&lt;link&gt;: percents, photos, Send. "Received" status; page and API carry no verdicts; staff API returns 401 | C1 | PASS |
-| Contractor | The report the MEO waits for arrives in the system | Engineer opens the period and sees the contractor's numbers | C2 | PASS |
+| Contractor | The report the office waits for arrives in the system | Engineer opens the period and sees the contractor's numbers | C2 | PASS |
 | Auditor | Decision log and submission log with timestamps and who decided; cannot write | Auditor screen; CSV download; every write route returns 403 | A1 | PASS |
 | Public | Plain progress note per project; no verdict labels, no staff names, no accusation | /public/P-001 | P1 | PASS |
 | All | Brand shows as Cernen&trade;, product name from one constant | Sign-in page | P2 | PASS |

@@ -9,7 +9,7 @@ SA_NAME="${SA_NAME:-pop-run}"
 SA="${SA_NAME}@${PROJECT}.iam.gserviceaccount.com"
 BUCKET="${BUCKET:-${PROJECT}-pop-photos}"
 MODEL="${MODEL:-gemini-3.8-flash}"
-DAILY_CAP_USD="${DAILY_CAP_USD:-3}"           # estimated live model spend per day (src/ai/spend.js); not a spending limit on the account
+DAILY_CAP_USD="${DAILY_CAP_USD:-5}"           # estimated live model spend per day (src/ai/spend.js); not a spending limit on the account
 # Collection groups that carry expireAt and get a TTL policy: the visitor copies (ws/<id>/...), the
 # per-visitor caches and the workspace records. Keep in step with src/store/firestore.js.
 COLLECTIONS="users projects periods photos submissions decisions transmittals monitoring meta aicache notecache workspaces visioncache translatecache"

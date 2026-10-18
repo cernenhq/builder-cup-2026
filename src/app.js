@@ -101,7 +101,8 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   // valid contractor submission (req.ensureWorkspace), after the request has been checked.
   const workspaces = createWorkspaces({ rootStore, config, dayFn: () => manilaDate(new Date()) });
   r.use((req, res, next) => {
-    const judge = workspaces.readJudge(req);
+    const hasCode = workspaces.readJudge(req);
+    const judge = hasCode || config.openLive;
     const ctx = { ws: MAIN, judge, request: true, expiresAt: null };
     if (config.workspaces) {
       const cur = workspaces.read(req);
@@ -125,6 +126,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
       };
     } else req.ensureWorkspace = async () => {};
     req.judge = judge;
+    req.judgeCode = hasCode;
     als.run(ctx, () => next());
   });
   r.use(authMiddleware({ config, store }));
@@ -199,7 +201,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
       photos: photoStore.kind,
       demoLogin: config.demoLogin,
       // Live model calls need the judge access code; everyone else sees saved Gemini runs.
-      access: { judge: !!req.judge, liveAi: config.ai !== 'mock', codeConfigured: !!config.judgeCode },
+      access: { judge: !!req.judge, code: !!req.judgeCode, open: !!config.openLive, liveAi: config.ai !== 'mock', codeConfigured: !!config.judgeCode },
       model: config.ai === 'mock' ? 'demo-reader' : config.geminiModel,
       workspace: config.workspaces ? (req.workspace ? { id: req.workspace.id.slice(0, 7), expiresAt: req.workspace.expiresAt, own: true } : { own: false }) : null,
       phrases: PHRASES,

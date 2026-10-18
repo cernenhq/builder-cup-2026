@@ -43,7 +43,7 @@ if applying; then
   else openssl rand -hex 32 | tr -d '\n' | gcloud secrets create pop-session-secret --data-file=- --project "$PROJECT"; fi
   if gcloud secrets describe pop-judge-code --project "$PROJECT" >/dev/null 2>&1; then echo "  pop-judge-code exists, kept."
   else
-    printf 'Type the judge access code (nothing shows while you type; it goes only in the submission form): '
+    printf 'Type the judge access code (nothing shows while you type; never written to a file): '
     read -rs JC; echo
     printf '%s' "$JC" | gcloud secrets create pop-judge-code --data-file=- --project "$PROJECT"; unset JC
   fi

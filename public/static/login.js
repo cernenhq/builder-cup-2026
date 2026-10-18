@@ -43,9 +43,11 @@
     </section>
     ${meta.access && meta.access.liveAi ? `<section class="section card" data-testid="judge-access">
       <h2>Judges and organisers</h2>
-      ${meta.access.judge
+      ${meta.access.open && !meta.access.code
+        ? '<p class="small" data-testid="judge-on">Live Gemini is on for this link, within a daily budget: new photos, changed claims and new decisions get live runs and drafts. No code needed. If the day\'s budget is used up, the saved runs keep working.</p>'
+        : meta.access.judge
         ? '<p class="small" data-testid="judge-on">Judge access is on in this browser: live Gemini runs and drafts are available (within a daily limit).</p>'
-        : `<p class="small">You can open every screen without a code. The supplied demo months open on saved Gemini runs, and the seeded April decisions have saved drafts. Anything new (new photos, changed claims or decisions) needs a live run: enter the access code from the submission form.</p>
+        : `<p class="small">You can open every screen without a code. The supplied demo months open on saved Gemini runs, and the seeded April decisions have saved drafts. Anything new (new photos, changed claims or decisions) needs a live run, which needs an access code.</p>
            <form id="judgeForm" class="row"><label>Access code <input id="judgeCode" type="password" autocomplete="off" data-testid="judge-code"></label><button class="btn" type="submit">Turn on live AI</button><span id="judgeMsg" class="small"></span></form>`}
     </section>` : ''}`;
   const jf = document.getElementById('judgeForm');

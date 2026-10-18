@@ -53,6 +53,9 @@ function loadConfig(env = process.env) {
     imageModel: env.IMAGE_MODEL || '',
     // Live model calls need the judge access code (Secret Manager on Cloud Run) and stay under a daily cap.
     judgeCode: env.JUDGE_CODE || '',
+    // OPEN_LIVE=1: live runs in the app's own flows (fixed prompts) need no code on this service, still
+    // under the daily cap. The prototype's free-form Gemini endpoint keeps requiring the code.
+    openLive: env.OPEN_LIVE === '1',
     dailyCapUsd: num(env.DAILY_CAP_USD, 3),
     // scripts/record-runs.js only: new answers and drafts become the shared saved seed runs.
     recordShared: bool(env.RECORD_SHARED, false),

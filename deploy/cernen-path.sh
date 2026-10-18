@@ -5,9 +5,9 @@
 #   APPLY=1 bash deploy/cernen-path.sh
 #
 # Which service:
-#   SERVICE=proof-of-progress-cernen (default) — a second Cloud Run service on the same project, data,
+#   SERVICE=proof-of-progress-cernen (default): a second Cloud Run service on the same project, data,
 #     bucket, secrets and daily cap. The judged service (proof-of-progress) is not touched.
-#   SERVICE=proof-of-progress — the judged service itself, once changing it is cleared.
+#   SERVICE=proof-of-progress: the judged service itself, once changing it is cleared.
 # Both must run the same seed files (src/seed/*): they share the seeded demo copy.
 set -euo pipefail
 # Set before config.sh, which would otherwise default SERVICE to the judged service.

@@ -40,6 +40,8 @@ Modifications: 11 monthly frames were extracted, aligned to one camera view, res
 
 Street level is blurred. Small, unidentifiable figures can remain visible on the rooftop, and parts of the frame edges are not blurred. No faces or plates are readable.
 
+**Interactive prototype.** `public/prototype.html` (served at `/prototype`) embeds frames from the same dataset without the street-level blur: aligned and resized, otherwise unchanged. Small figures and vehicles at street level are visible there. The working app, its saved Gemini runs and the measured results use only the blurred frames in `seed-photos/`.
+
 **AI illustration of the finished building.** `public/static/finished-look.jpg` was made once, on 18 Oct 2026, by Gemini 3.1 Flash Image (`gemini-3.1-flash-image`, Vertex AI) from the April 2026 frame (`seed-photos/p10.jpg`), then resized to 1120x630. The camera's date stamp is covered by the label "AI ILLUSTRATION · NOT EVIDENCE · NOT THE DESIGN". It is a derivative of the CC BY 4.0 frame above. It is saved in the repo and loaded as a static file, so Lens and Swipe on it make no model call; regenerating it in the prototype is a live call that needs the judge access code. It is never stored as a site photo and no check reads it; Change map is off for it.
 
 The frames are used only for the fictional demo project P-001. The dataset author does not endorse this project.

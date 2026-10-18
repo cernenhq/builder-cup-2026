@@ -11,7 +11,7 @@ test.describe('Mayor', () => {
     const text = await page.getByTestId('escalations').innerText();
     expect(text).toContain('DILG SubayBAYAN update for May 2026 was due on 24 May 2026');
     expect(text).toContain('the 70% milestone was planned for 31 March 2026');
-    expect(text).toContain('photos do not show what the progress claim says on 3 line items');
+    expect(text).toContain('photos do not show what the progress claim says on 2 line items');
     // Office-only (yellow) items are not here.
     for (const officeOnly of ['Behind plan', 'submitted late', 'awaiting review', 'waiting for the reviewer', 'waiting for a person to decide', 'photo check', 'COA monthly report for May 2026']) expect(text).not.toContain(officeOnly);
     // Nothing else on the screen: no project list, no forms.
@@ -71,7 +71,7 @@ test.describe('Auditor (COA, IAS, DILG), read only', () => {
     await signIn(page, 'aud-coa', 'auditor');
     const dl = page.getByTestId('decision-log');
     await expect(dl).toContainText('Benita Cruz (demo)');
-    await expect(dl).toContainText('Canopy fascia is still bare framework in the April frame.');
+    await expect(dl).toContainText('Street level is blurred in this copy, so the entrance canopy cannot be seen.');
     await expect(dl).toContainText('override');
     const sl = page.getByTestId('submission-log');
     await expect(sl).toContainText('COA monthly report');

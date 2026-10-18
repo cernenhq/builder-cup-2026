@@ -10,6 +10,9 @@ const os = require('os');
 const path = require('path');
 
 const CAP = Number(process.env.RECORD_CAP_USD || 1.8);
+// RECORD_NOTES_ONLY=1: re-record the saved drafts after the seeded decisions change; no evaluation report.
+const NOTES_ONLY = process.env.RECORD_NOTES_ONLY === '1';
+const newNoteIds = new Set();
 
 async function main() {
   if (!process.env.GOOGLE_CLOUD_PROJECT) throw new Error('Set GOOGLE_CLOUD_PROJECT.');
@@ -46,6 +49,18 @@ async function main() {
     als.run({ ws: MAIN, judge: true }, async () => {
       try {
         const p1 = await store.get('projects', 'P-001');
+        // Saved drafts for the seeded April decisions, one per audience. Written first, from the seeded
+        // state, before any check is re-run (a re-run makes the seeded decisions belong to an earlier run).
+        for (const audience of ['office', 'mayor', 'public']) {
+          try {
+            const n = await draftNote({ store, rootStore, live, spend, judge: true, config, project: p1, period: '2026-04', audience });
+            newNoteIds.add(n.key);
+            console.log(`note ${audience}: ${n.text.slice(0, 80)}...`);
+          } catch (e) {
+            console.log(`note ${audience} failed: ${e.message}`);
+          }
+        }
+        if (NOTES_ONLY) return resolve();
         for (const m of D.MONTHS) {
           if (m.notSeeded) {
             await A.addPhoto({ store, photoStore, project: p1, period: m.period, buffer: fs.readFileSync(path.join(__dirname, '..', 'seed-photos', m.file)), fileName: m.file, contentType: 'image/jpeg', user, source: 'office', stampText: m.stamp, recorded: { exif: { taken: m.emb, gps: null, make: null, model: null }, metadataSource: 'recorded from the source video clip', sourceResolution: m.res, framingNote: m.framing || '' } });
@@ -58,15 +73,6 @@ async function main() {
         const c3 = await runCheck({ store: noCorrections, photoStore, readers, project: p3, period: '2026-05', user });
         results.push({ project: 'P-003', period: '2026-05', check: c3 });
         console.log(`P-003 2026-05: aiMode=${c3.aiMode} spent=$${(await spend.today()).toFixed(4)}`);
-        // Saved drafts for the seeded April decisions, one per audience.
-        for (const audience of ['office', 'mayor', 'public']) {
-          try {
-            const n = await draftNote({ store, rootStore, live, spend, judge: true, config, project: p1, period: '2026-04', audience });
-            console.log(`note ${audience}: ${n.text.slice(0, 80)}...`);
-          } catch (e) {
-            console.log(`note ${audience} failed: ${e.message}`);
-          }
-        }
         resolve();
       } catch (e) {
         reject(e);
@@ -109,10 +115,16 @@ async function main() {
   const spent = await spend.today();
 
   const aicache = await rootStore.find('aicache', {});
-  const notecache = await rootStore.find('notecache', {});
+  // Keep only drafts that match the current seeded decisions (older ones can never match again).
+  const notecache = (await rootStore.find('notecache', {})).filter((n) => newNoteIds.has(n.id) || !NOTES_ONLY);
   const out = path.join(__dirname, '..', 'src', 'seed', 'saved-runs.json');
   fs.writeFileSync(out, `${JSON.stringify({ recordedAt: new Date().toISOString(), model: config.geminiModel, aicache, notecache }, null, 1)}\n`);
   const stamp = new Date().toISOString().replace(/[:.]/g, '').slice(0, 15);
+  if (NOTES_ONLY) {
+    console.log(`Notes re-recorded (${notecache.length}); no evaluation report written. Estimated spend: US$${(await spend.today()).toFixed(4)}`);
+    fs.rmSync(photoDir, { recursive: true, force: true });
+    return;
+  }
   fs.mkdirSync(path.join(__dirname, '..', 'eval'), { recursive: true });
   const report = { recordedAt: new Date().toISOString(), model: config.geminiModel, setup: 'v3 Node readers (prompt in src/ai/prompt.js), one photo per month, no earlier corrections', metrics, timing, estimatedSpendUsd: Number(spent.toFixed(4)), rows };
   fs.writeFileSync(path.join(__dirname, '..', 'eval', `R2_${stamp}.json`), `${JSON.stringify(report, null, 1)}\n`);

@@ -133,8 +133,8 @@ const P001_DECISIONS = {
   Q035: ['supported', 'Glass visible across the wing; reflections only.'],
   Q037: ['supported', 'Canopy steel seen at street level on the 21 Nov site visit; the frame does not show it clearly.'],
   Q041: ['not_assessable', 'Low-resolution winter frame; tarp coverage unclear.'],
-  Q053: ['contradicted', 'Door frames only at the entrance; no canopy structure visible.'],
-  Q064: ['contradicted', 'Canopy fascia is still bare framework in the April frame.']
+  Q053: ['not_assessable', 'Street level is blurred in this copy, so the entrance canopy cannot be seen. Check on the next site visit.'],
+  Q064: ['not_assessable', 'Street level is blurred in this copy, so the entrance canopy cannot be seen. Check on the next site visit.']
 };
 
 const P001_PERCENT = { '2025-06': 40, '2025-07': 45, '2025-08': 50, '2025-09': 53, '2025-10': 56, '2025-11': 58, '2025-12': 59, '2026-01': 60, '2026-02': 62, '2026-03': 64, '2026-04': 68 };

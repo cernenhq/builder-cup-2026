@@ -87,9 +87,13 @@ async function seedDemo({ store, photoStore, readers: seedReaders }) {
       const rec = (D.CLAIMS[m.k] || []).find((c) => c.l === l.lineKey);
       let decision;
       let reason;
+      // Seeded decisions must be true to the photo on screen: agree where the readers agree, say so where
+      // they disagree, and override only with a reason that holds for this frame (P001_DECISIONS).
+      const agreed = ['supported', 'contradicted', 'not_assessable'].includes(l.aiDefault);
       if (D.P001_DECISIONS[rec.id]) [decision, reason] = D.P001_DECISIONS[rec.id];
       else if (l.hidden) [decision, reason] = ['not_assessable', 'Hidden work; cannot be seen from the camera.'];
-      else [decision, reason] = [MAP[rec.A], rec.A === 'N' ? 'Not clear enough in this frame to say.' : 'Agree with both readers; visible in the frame.'];
+      else if (agreed) [decision, reason] = [l.aiDefault, l.aiDefault === 'not_assessable' ? 'Agree with both readers: not visible enough in this frame to say.' : 'Agree with both readers; visible in the frame.'];
+      else [decision, reason] = [MAP[rec.A], `The readers disagree, so there is no default. Decided from the frame: ${MAP[rec.A] === 'not_assessable' ? 'not clear enough to say' : MAP[rec.A] === 'supported' ? 'the work is visible' : 'the photo shows otherwise'}.`];
       await decideLine({ store, project: p1, period: m.period, lineKey: l.lineKey, decision, reason, user: benita, at });
     }
   }

@@ -48,9 +48,9 @@ async function draftNote({ store, rootStore, live, spend, judge, config, project
   const key = crypto.createHash('sha256').update(`${model}|${audience}|${f}`).digest('hex').slice(0, 40);
   // A visitor's own drafts first (kept in their copy), then the shared saved drafts for the seeded decisions.
   const own = await store.get('notecache', key);
-  if (own) return { text: own.text, model: own.model, at: own.at, saved: true, audience };
+  if (own) return { text: own.text, model: own.model, at: own.at, saved: true, audience, key };
   const hit = await rootStore.get('notecache', key);
-  if (hit) return { text: hit.text, model: hit.model, at: hit.at, saved: true, audience };
+  if (hit) return { text: hit.text, model: hit.model, at: hit.at, saved: true, audience, key };
   if (!live) throw Object.assign(new Error('Live AI is off in this deployment, and no saved draft matches these decisions.'), { status: 403, needsCode: false });
   if (!judge) throw Object.assign(new Error('Live Gemini actions need the judge access code (enter it on the sign-in page).'), { status: 403, needsCode: true });
   const prompt = promptFor(audience, f);
@@ -68,7 +68,7 @@ async function draftNote({ store, rootStore, live, spend, judge, config, project
   const text = neutralize(r.text);
   const at = new Date().toISOString();
   await (config.recordShared ? rootStore : store).set('notecache', key, { id: key, text, model: r.model, at, audience });
-  return { text, model: r.model, at, saved: false, audience };
+  return { text, model: r.model, at, saved: false, audience, key };
 }
 
 module.exports = { draftNote, promptFor, facts, AUDIENCES };

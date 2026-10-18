@@ -3,6 +3,11 @@
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  // The path the app is served under: '' on its own host, '/builderscup' behind cernen.com. The server
+  // writes it into every page. url('/api/x') gives the address to use for an app path.
+  const baseMeta = document.querySelector('meta[name="pop-base"]');
+  const base = baseMeta ? baseMeta.content : '';
+  const url = (p) => (typeof p === 'string' && p.startsWith('/') && !p.startsWith('//') && !(base && (p === base || p.startsWith(`${base}/`))) ? base + p : p);
 
   async function api(path, opts = {}) {
     const o = { method: opts.method || 'GET', headers: { 'x-pop-request': '1' }, credentials: 'same-origin' };
@@ -11,7 +16,7 @@
       o.headers['content-type'] = 'application/json';
       o.body = JSON.stringify(opts.body);
     }
-    const r = await fetch(path, o);
+    const r = await fetch(url(path), o);
     let data = null;
     try {
       data = await r.json();
@@ -62,7 +67,7 @@
       try {
         me = await api('/api/auth/me');
       } catch (e) {
-        location.href = '/';
+        location.href = url('/');
         return null;
       }
     }
@@ -76,7 +81,7 @@
     if (so)
       so.onclick = async () => {
         await api('/api/auth/logout', { method: 'POST' });
-        location.href = '/';
+        location.href = url('/');
       };
     return { meta: m, me };
   }
@@ -95,5 +100,5 @@
     return list.map((f) => `<div class="find" data-check="${esc(f.key)}" data-level="${esc(f.level)}"><span class="dot ${esc(f.level)}"></span><div>${esc(f.title)}${f.detail ? `<div class="d">${esc(f.detail)}</div>` : ''}</div></div>`).join('');
   }
 
-  window.PoP = { esc, $, $$, api, chip, statusChip, fmtDate, fmtTime, monthLabel, setMsg, meta, header, stage, findings, VL, STATUS };
+  window.PoP = { base, url, esc, $, $$, api, chip, statusChip, fmtDate, fmtTime, monthLabel, setMsg, meta, header, stage, findings, VL, STATUS };
 })();

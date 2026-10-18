@@ -11,7 +11,7 @@
     const L = await api(`/api/audit/projects/${pid}/log`);
     main.innerHTML = `<div class="card section"><div class="row"><label>Project <select id="psel" data-testid="audit-project">${projects
       .map((p) => `<option value="${esc(p.id)}" ${p.id === pid ? 'selected' : ''}>${esc(p.name)} (${esc(p.contractId)})</option>`)
-      .join('')}</select></label><span class="spacer"></span><a class="btn" href="/api/audit/projects/${esc(pid)}/log.csv" data-testid="audit-csv">Download CSV</a></div>
+      .join('')}</select></label><span class="spacer"></span><a class="btn" href="${esc(PoP.base)}/api/audit/projects/${esc(pid)}/log.csv" data-testid="audit-csv">Download CSV</a></div>
       <p class="small">Read only. Every line decision shows both readers, the AI default, what the reviewer decided, the reason, who and when. Timestamps are when the entry was made.</p></div>
       <div class="card section" data-testid="decision-log"><h2>Decision log</h2><div class="tablewrap"><table><tr><th>When</th><th>Period</th><th>Line or check</th><th>Readers</th><th>Default</th><th>Decision</th><th>Reason</th><th>Who</th></tr>${L.decisions
         .map((d) =>

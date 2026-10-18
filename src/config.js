@@ -10,6 +10,14 @@ function num(v, d) {
   return v === undefined || v === '' || Number.isNaN(n) ? d : n;
 }
 
+// '' or a single path segment such as '/builderscup' (no trailing slash).
+function basePath(v) {
+  const s = String(v || '').trim().replace(/\/+$/, '');
+  if (!s) return '';
+  if (!/^\/[a-z0-9][a-z0-9-]*$/i.test(s)) throw new Error(`BASE_PATH must look like /builderscup, got "${v}"`);
+  return s;
+}
+
 function loadConfig(env = process.env) {
   const production = env.NODE_ENV === 'production';
   let sessionSecret = env.SESSION_SECRET || '';
@@ -63,6 +71,12 @@ function loadConfig(env = process.env) {
     seed: env.SEED || 'demo',
     allowTestReset: bool(env.ALLOW_TEST_RESET, false),
     maxUploadMb: num(env.MAX_UPLOAD_MB, 15),
+    // A second path the app is also served under, e.g. /builderscup when cernen.com/builderscup is
+    // proxied here. The app keeps answering at / as well, so the service's own URL keeps working.
+    basePath: basePath(env.BASE_PATH),
+    // Shared with the cernen.com proxy. Only a request carrying it may name the visitor's address
+    // (x-cernen-client-ip); everyone else is counted by the address Google's front end saw.
+    proxySecret: env.PROXY_SECRET || '',
     escalation: {
       reportOverdueDays: num(env.ESCALATE_REPORT_OVERDUE_DAYS, 7),
       milestoneOverdueDays: num(env.ESCALATE_MILESTONE_OVERDUE_DAYS, 30),

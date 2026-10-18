@@ -47,18 +47,18 @@ function createWorkspaces({ rootStore, config, dayFn }) {
     const p = verify(parseCookies(req.headers.cookie)[WS_COOKIE], config.sessionSecret);
     return p && p.ws ? { id: p.ws, expiresAt: new Date(p.exp).toISOString() } : null;
   }
-  function write(res, ws, secure) {
+  function write(res, ws, secure, cookiePath = '/') {
     const exp = new Date(ws.expiresAt).getTime();
-    res.append('Set-Cookie', `${WS_COOKIE}=${sign({ ws: ws.id, exp }, config.sessionSecret)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.max(0, Math.floor((exp - Date.now()) / 1000))}${secure ? '; Secure' : ''}`);
+    res.append('Set-Cookie', `${WS_COOKIE}=${sign({ ws: ws.id, exp }, config.sessionSecret)}; Path=${cookiePath}; HttpOnly; SameSite=Lax; Max-Age=${Math.max(0, Math.floor((exp - Date.now()) / 1000))}${secure ? '; Secure' : ''}`);
   }
 
   function readJudge(req) {
     const p = verify(parseCookies(req.headers.cookie)[JUDGE_COOKIE], config.sessionSecret);
     return !!(p && p.judge);
   }
-  function writeJudge(res, secure) {
+  function writeJudge(res, secure, cookiePath = '/') {
     const days = 21;
-    res.append('Set-Cookie', `${JUDGE_COOKIE}=${sign({ judge: true, exp: Date.now() + days * 86400000 }, config.sessionSecret)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${days * 86400}${secure ? '; Secure' : ''}`);
+    res.append('Set-Cookie', `${JUDGE_COOKIE}=${sign({ judge: true, exp: Date.now() + days * 86400000 }, config.sessionSecret)}; Path=${cookiePath}; HttpOnly; SameSite=Lax; Max-Age=${days * 86400}${secure ? '; Secure' : ''}`);
   }
   function codeMatches(code) {
     if (!config.judgeCode) return false;

@@ -1,0 +1,501 @@
+{
+ "ranAt": "2026-10-18T07:11:48.444Z",
+ "code": "src/domain/rules.js reuseCheck + src/domain/imagefeatures.js (as deployed)",
+ "editedCopies": {
+  "caught": 66,
+  "of": 66,
+  "edits": [
+   "recompressed",
+   "brightened",
+   "darkened",
+   "softened",
+   "shrunk",
+   "mirrored"
+  ]
+ },
+ "differentMonthsNotMatched": {
+  "count": 11,
+  "of": 11,
+  "nearestDistances": [
+   22,
+   12,
+   12,
+   12,
+   10,
+   12,
+   8,
+   8,
+   10,
+   16,
+   12
+  ]
+ },
+ "cropsCaught": {
+  "pct10": "0/11",
+  "pct20": "0/11"
+ },
+ "rows": [
+  {
+   "frame": "p01",
+   "edit": "recompressed",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p01",
+   "edit": "brightened",
+   "caught": true,
+   "distance": 2,
+   "mirrored": false
+  },
+  {
+   "frame": "p01",
+   "edit": "darkened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p01",
+   "edit": "softened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p01",
+   "edit": "shrunk",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p01",
+   "edit": "mirrored",
+   "caught": true,
+   "distance": 0,
+   "mirrored": true
+  },
+  {
+   "frame": "p02",
+   "edit": "recompressed",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p02",
+   "edit": "brightened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p02",
+   "edit": "darkened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p02",
+   "edit": "softened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p02",
+   "edit": "shrunk",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p02",
+   "edit": "mirrored",
+   "caught": true,
+   "distance": 0,
+   "mirrored": true
+  },
+  {
+   "frame": "p03",
+   "edit": "recompressed",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p03",
+   "edit": "brightened",
+   "caught": true,
+   "distance": 2,
+   "mirrored": false
+  },
+  {
+   "frame": "p03",
+   "edit": "darkened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p03",
+   "edit": "softened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p03",
+   "edit": "shrunk",
+   "caught": true,
+   "distance": 2,
+   "mirrored": false
+  },
+  {
+   "frame": "p03",
+   "edit": "mirrored",
+   "caught": true,
+   "distance": 0,
+   "mirrored": true
+  },
+  {
+   "frame": "p04",
+   "edit": "recompressed",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p04",
+   "edit": "brightened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p04",
+   "edit": "darkened",
+   "caught": true,
+   "distance": 2,
+   "mirrored": false
+  },
+  {
+   "frame": "p04",
+   "edit": "softened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p04",
+   "edit": "shrunk",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p04",
+   "edit": "mirrored",
+   "caught": true,
+   "distance": 0,
+   "mirrored": true
+  },
+  {
+   "frame": "p05",
+   "edit": "recompressed",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p05",
+   "edit": "brightened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p05",
+   "edit": "darkened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p05",
+   "edit": "softened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p05",
+   "edit": "shrunk",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p05",
+   "edit": "mirrored",
+   "caught": true,
+   "distance": 0,
+   "mirrored": true
+  },
+  {
+   "frame": "p06",
+   "edit": "recompressed",
+   "caught": true,
+   "distance": 2,
+   "mirrored": false
+  },
+  {
+   "frame": "p06",
+   "edit": "brightened",
+   "caught": true,
+   "distance": 4,
+   "mirrored": false
+  },
+  {
+   "frame": "p06",
+   "edit": "darkened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p06",
+   "edit": "softened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p06",
+   "edit": "shrunk",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p06",
+   "edit": "mirrored",
+   "caught": true,
+   "distance": 0,
+   "mirrored": true
+  },
+  {
+   "frame": "p07",
+   "edit": "recompressed",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p07",
+   "edit": "brightened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p07",
+   "edit": "darkened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p07",
+   "edit": "softened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p07",
+   "edit": "shrunk",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p07",
+   "edit": "mirrored",
+   "caught": true,
+   "distance": 0,
+   "mirrored": true
+  },
+  {
+   "frame": "p08",
+   "edit": "recompressed",
+   "caught": true,
+   "distance": 2,
+   "mirrored": false
+  },
+  {
+   "frame": "p08",
+   "edit": "brightened",
+   "caught": true,
+   "distance": 2,
+   "mirrored": false
+  },
+  {
+   "frame": "p08",
+   "edit": "darkened",
+   "caught": true,
+   "distance": 2,
+   "mirrored": false
+  },
+  {
+   "frame": "p08",
+   "edit": "softened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p08",
+   "edit": "shrunk",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p08",
+   "edit": "mirrored",
+   "caught": true,
+   "distance": 0,
+   "mirrored": true
+  },
+  {
+   "frame": "p09",
+   "edit": "recompressed",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p09",
+   "edit": "brightened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p09",
+   "edit": "darkened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p09",
+   "edit": "softened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p09",
+   "edit": "shrunk",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p09",
+   "edit": "mirrored",
+   "caught": true,
+   "distance": 0,
+   "mirrored": true
+  },
+  {
+   "frame": "p10",
+   "edit": "recompressed",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p10",
+   "edit": "brightened",
+   "caught": true,
+   "distance": 2,
+   "mirrored": false
+  },
+  {
+   "frame": "p10",
+   "edit": "darkened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p10",
+   "edit": "softened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p10",
+   "edit": "shrunk",
+   "caught": true,
+   "distance": 2,
+   "mirrored": false
+  },
+  {
+   "frame": "p10",
+   "edit": "mirrored",
+   "caught": true,
+   "distance": 0,
+   "mirrored": true
+  },
+  {
+   "frame": "p11",
+   "edit": "recompressed",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p11",
+   "edit": "brightened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p11",
+   "edit": "darkened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p11",
+   "edit": "softened",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p11",
+   "edit": "shrunk",
+   "caught": true,
+   "distance": 0,
+   "mirrored": false
+  },
+  {
+   "frame": "p11",
+   "edit": "mirrored",
+   "caught": true,
+   "distance": 0,
+   "mirrored": true
+  }
+ ]
+}

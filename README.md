@@ -49,6 +49,8 @@ The saved Gemini run for project P-001 was scored once against a fixed reference
 
 [`eval/R2b_retry_timedout_months_2026-10-17T2216.md`](eval/R2b_retry_timedout_months_2026-10-17T2216.md) is a retry of the months that had no full answer, run only so the demo has saved answers for them. Its report includes aggregate figures because the same script wrote it, but it does not replace the headline score above, which comes from the single scored run.
 
+**Rule checks (no AI), on the deployed code, 18 Oct 2026** ([`eval/reuse_stress_2026-10-18.json`](eval/reuse_stress_2026-10-18.json), `node scripts/reuse-stress.js`): 66 of 66 edited copies of the 11 public frames caught as reuse (recompressed, brightened, darkened, softened, shrunk, mirrored); 11 of 11 different months correctly not matched (nearest distances 8 to 22, threshold 6); 0 of 22 crops of 10% or 20% caught, a stated limit of the hash check.
+
 **April 2026, expected results on the saved run:**
 
 | Line | AI default |

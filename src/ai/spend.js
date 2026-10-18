@@ -73,7 +73,8 @@ function createSpendGuard({ rootStore, capUsd, dayFn }) {
       const cost = typeof actualUsd === 'number' && actualUsd > 0 ? actualUsd : ticket.amount;
       await rootStore.transact('spend', docId(ticket.day), (cur) => {
         const d = cur || blank();
-        return { doc: { ...d, reserved: round6(Math.max(0, (d.reserved || 0) - ticket.amount)), usd: round6((d.usd || 0) + cost), calls: (d.calls || 0) + 1, updatedAt: new Date().toISOString() } };
+        const left = round6((d.reserved || 0) - ticket.amount);
+        return { doc: { ...d, reserved: left < 0.00001 ? 0 : left, usd: round6((d.usd || 0) + cost), calls: (d.calls || 0) + 1, updatedAt: new Date().toISOString() } };
       });
     }
   };

@@ -68,7 +68,7 @@ async function step(name, fn) {
 (async () => {
   const anon = visitor();
   await step('health and sign-in page', async () => {
-    assert.equal((await anon.call('GET', '/healthz')).status, 200);
+    assert.equal((await anon.call('GET', '/health')).status, 200);
     assert.match((await anon.call('GET', '/')).text, /Sign in/);
   });
   await step('anonymous read of the seeded demo creates no copy', async () => {

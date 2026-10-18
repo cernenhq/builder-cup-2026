@@ -149,7 +149,8 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   const sendErr = (res, e) => res.status(e.status || 400).json({ error: e.message });
 
   // ---------- meta, health ----------
-  app.get('/healthz', (req, res) => res.json({ ok: true }));
+  // Cloud Run reserves /healthz at its front end, so /health is the route to use on the deployed service.
+  app.get(['/healthz', '/health'], (req, res) => res.json({ ok: true }));
   app.get('/api/meta', (req, res) =>
     res.json({
       productName: PRODUCT_NAME,

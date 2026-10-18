@@ -97,7 +97,7 @@
       <p class="small">Upload the photos as they came off the camera or phone. Date and GPS stay in the file and are read if present; they are never required.</p>
       <div class="form"><label>Photos <input type="file" id="photoFiles" accept="image/*" multiple ${dis} data-testid="photo-input"></label>
       <label>Printed camera stamp, if the photo shows one (optional) <input id="stampText" placeholder="05-21-2026 Thu 11:12:21" ${dis}></label>
-      <button class="primary" id="uploadBtn" ${dis} data-testid="upload-btn">Upload</button></div><div class="msg" id="upMsg"></div>${flipSample()}
+      <button class="primary" id="uploadBtn" ${dis} data-testid="upload-btn">Upload</button></div><div class="msg" id="upMsg"></div>${flipSample()}${cameraBox()}
       <div class="thumbs section">${per.photos.length ? per.photos.map((ph) => `<div class="thumb" data-testid="photo-thumb"><img src="${esc(ph.url)}" alt=""><div>${isTestPhoto(ph) ? '<span class="chip lvl-1" data-testid="test-photo">Test photo</span><br>' : ''}<b>${esc(ph.fileName)}</b><br>${ph.stampText ? `Stamp: ${esc(ph.stampText)}<br>` : ''}File date: ${esc(ph.exif && ph.exif.taken ? ph.exif.taken.replace('T', ' ') : 'none')}<br>GPS: ${esc(ph.exif && ph.exif.gps ? `${ph.exif.gps.lat.toFixed(5)}, ${ph.exif.gps.lon.toFixed(5)}` : 'none')}<br><span class="mini">${esc(ph.source === 'contractor' ? 'from the contractor' : `uploaded by ${ph.uploadedBy.name}`)}</span></div></div>`).join('') : '<p class="small">No photos for this period yet.</p>'}</div></div>`;
   }
 
@@ -106,7 +106,18 @@
     const prev = prevMonthPhoto();
     if (!S.project.canWrite || !prev) return '';
     return `<div class="flip-sample" data-testid="flip-sample"><div><b>Test photo</b> <span class="mini">Try the rule checks with a photo that should not pass quietly: ${esc(prev.label)}'s photo, mirrored, with its old printed stamp and a later file date. It goes through the same upload as any photo, so the real rule checks see it when you run the check.</span></div>
-      <button id="flipBtn" data-testid="flip-btn">Try it: send last month's photo, flipped</button></div>`;
+      <button id="flipBtn" data-testid="flip-btn">Try it: send last month's photo, flipped</button>
+      <div class="test-photos"><div class="tp"><button data-test-photo="recompressed" data-testid="recompress-btn">Test photo: recompressed copy</button><span class="mini">Last month's photo saved again at low JPEG quality. The reuse check should still see it.</span></div>
+      <div class="tp"><button data-test-photo="crop" data-testid="crop-btn">Test photo: 10% crop</button><span class="mini">10% cut off each side, then resized back. The check is expected not to catch this: a known limit of the reuse check.</span></div></div></div>`;
+  }
+  // A still photo from this device's camera, sent through the same upload.
+  function cameraBox() {
+    if (!S.project.canWrite) return '';
+    return `<div class="cam-box" data-testid="cam-box"><button id="camBtn" data-testid="cam-btn">Take a site photo with this device's camera</button>
+      <span class="mini">Gemini Live on video is on the roadmap; this takes a still photo.</span>
+      <video id="camVideo" muted playsinline hidden></video>
+      <div class="row" id="camCtl" hidden><button class="primary" id="camShot" data-testid="cam-shot">Capture and add</button><button id="camStop">Cancel</button></div>
+      <div class="msg" id="camMsg"></div></div>`;
   }
 
   const isTestPhoto = (ph) => /^TEST-/.test(ph.fileName || '');
@@ -159,12 +170,39 @@
       body = `<p class="small">Run ${esc(fmtTime(c.runAt))} by ${esc(c.runBy.name)}. ${aiBanner(c)}
         ${c.readerErrors && c.readerErrors.A ? `<br><span class="msg err">Reader A: ${esc(c.readerErrors.A)}</span>` : ''}${c.readerErrors && c.readerErrors.B ? `<br><span class="msg err">Reader B: ${esc(c.readerErrors.B)}</span>` : ''}</p>
         <div class="grid cols-2"><div>${photo ? `<div id="lensStage">${stage(photo.url, boxes)}</div><div id="lensPicker" class="section"></div><p class="mini">The demo's monthly frames were prepared from one fixed camera and aligned to the same view. Uploaded photos are not aligned; the rule check only says whether two views look comparable, and when they do not line up the honest answer is "not comparable".</p>` : '<p class="small" data-testid="no-photo-hint">No photo for this period yet, so every line is "no answer" until photos arrive. The comparison lens and swipe appear on months that have a photo: pick April 2026 above, or send a photo in step 1.</p>'}
-          <h3 class="section">Photo checks (no AI)</h3>${c.photoChecks.map((pc) => `<div class="small"><b>${esc(pc.fileName)}</b></div>${findings(pc.findings)}`).join('') || '<p class="small">No photos.</p>'}</div>
+          <h3 class="section">Photo checks (no AI)</h3>${c.photoChecks.map((pc) => `<div class="small"><b>${esc(pc.fileName)}</b></div>${findings(pc.findings)}`).join('') || '<p class="small">No photos.</p>'}${qualityPanel(per, c)}</div>
         <div data-testid="line-results">${per.canDecide ? '<p class="small decide-intro">You have the last word on each line. One click records your call; pick or type a reason first if you like. The decision log keeps the AI default and your decision.</p>' : '<p class="small">Read only for you. The engineer in charge and the office head decide each line.</p>'}${c.lines.map((l) => lineCard(l, mock, c)).join('')}</div></div>`;
     }
     return `<div class="card section" data-testid="check-card"><h2><span class="step">3</span>Check the claim against the photos</h2>
       <p class="small">Each line becomes one question a photo can answer. Rule checks run first (dates, location, reuse, whether two months' views compare), then two independent readers answer each question. A person then decides every line: the engineer in charge, or the office head.</p>
       <div class="row"><button class="primary" id="runCheck" ${dis} data-testid="run-check">Run the check</button><span class="msg" id="checkMsg"></span></div>${S.per.checkStale ? `<p class="banner-note" data-testid="check-stale"><b>This check is out of date.</b> ${esc(S.per.checkStaleReason || 'The photos or claims changed after it ran.')} Run the check again; until then its lines count as undecided.</p>` : ''}${body}</div>`;
+  }
+
+  // Photo quality rates the photo as evidence, kept apart from the line verdicts, which rate the work.
+  function qualityPanel(per, c) {
+    const pcs = (c.photoChecks || []).filter((pc) => pc && pc.findings);
+    if (!pcs.length) return '';
+    const worst = (list) => (list.some((f) => f.level === 'flag') ? 'flag' : list.some((f) => f.level !== 'ok') ? 'note' : 'ok');
+    const row = (k, label, level, text) => `<div class="pq-row" data-q="${esc(k)}" data-level="${esc(level)}"><span class="pq-k">${esc(label)}</span><span class="pq-lvl ${esc(level)}">${esc(level)}</span><span>${esc(text)}</span></div>`;
+    const blocks = pcs.map((pc) => {
+      const ph = per.photos.find((p) => p.id === pc.photoId) || per.photos.find((p) => p.fileName === pc.fileName) || {};
+      const gps = !!(ph.exif && ph.exif.gps);
+      const dates = pc.findings.filter((f) => /^(date|stamp|capture_date)/.test(f.key || ''));
+      const dLevel = dates.length ? worst(dates) : 'note';
+      const dText = dates.length ? dates.map((f) => f.title).join('; ') : 'No printed stamp or file date to compare with the period.';
+      const comp = pc.findings.find((f) => f.key === 'comparable');
+      const cLevel = !comp || !comp.comparable ? 'note' : comp.comparable === 'yes' ? 'ok' : comp.comparable === 'no' ? 'flag' : 'note';
+      const cText = comp ? comp.title : 'Not checked.';
+      const w = Number(ph.width) || 0;
+      const hgt = Number(ph.height) || 0;
+      const rText = w ? `${w} x ${hgt} px${w >= 1000 ? '' : ', under 1000 px wide'}` : 'Size not known.';
+      return `<div class="pq-photo" data-testid="photo-quality-photo"><div class="small"><b>${esc(pc.fileName || ph.fileName || 'Photo')}</b></div>
+        ${row('gps', 'GPS in file', gps ? 'ok' : 'note', gps ? 'Yes' : 'No')}
+        ${row('dates', 'Stamp, file date and period', dLevel, dText)}
+        ${row('view', 'View comparable with last month', cLevel, cText)}
+        ${row('resolution', 'Resolution', w >= 1000 ? 'ok' : 'note', rText)}</div>`;
+    });
+    return `<div class="photo-quality" data-testid="photo-quality"><h3>Photo quality</h3><p class="mini">This rates the photo as evidence, not the work.</p>${blocks.join('')}</div>`;
   }
 
   function readerBox(name, r, mock, waiting) {
@@ -397,7 +435,9 @@
     $$('[data-reason]').forEach((i) => (i.oninput = () => (S.reasons[i.dataset.reason] = i.value)));
     $$('[data-decide]').forEach((b) => (b.onclick = () => decide(b)));
     const fb = $('#flipBtn');
-    if (fb) fb.onclick = sendFlipped;
+    if (fb) fb.onclick = () => sendTestPhoto('flipped');
+    $$('[data-test-photo]').forEach((b) => (b.onclick = () => sendTestPhoto(b.dataset.testPhoto)));
+    wireCamera();
     $('#dnBtn').onclick = draftNote;
     $('#dnText').oninput = (e) => {
       if (S.note) S.note.text = e.target.value;
@@ -517,9 +557,15 @@
     seg.set(tiff, 10);
     return seg;
   }
-  async function sendFlipped() {
+  const TEST_KINDS = {
+    flipped: { file: 'flipped', done: 'mirrored', quality: 0.9 },
+    recompressed: { file: 'recompressed', done: 'saved again at low JPEG quality', quality: 0.35 },
+    crop: { file: 'cropped-10pc', done: 'with 10% cut off each side and resized back (a known limit of the reuse check)', quality: 0.9 }
+  };
+  async function sendTestPhoto(kind) {
     const prev = prevMonthPhoto();
-    if (!prev) return;
+    const k = TEST_KINDS[kind];
+    if (!prev || !k) return;
     setMsg($('#upMsg'), `Making the test photo from ${prev.label}'s photo...`);
     try {
       const im = await loadImg(prev.photo.url);
@@ -527,10 +573,18 @@
       cv.width = im.naturalWidth;
       cv.height = im.naturalHeight;
       const ctx = cv.getContext('2d');
-      ctx.translate(cv.width, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(im, 0, 0);
-      const blob = await new Promise((res) => cv.toBlob(res, 'image/jpeg', 0.9));
+      if (kind === 'flipped') {
+        ctx.translate(cv.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(im, 0, 0);
+      } else if (kind === 'crop') {
+        const dx = Math.round(cv.width * 0.1);
+        const dy = Math.round(cv.height * 0.1);
+        ctx.drawImage(im, dx, dy, cv.width - 2 * dx, cv.height - 2 * dy, 0, 0, cv.width, cv.height);
+      } else {
+        ctx.drawImage(im, 0, 0);
+      }
+      const blob = await new Promise((res) => cv.toBlob(res, 'image/jpeg', k.quality));
       const jpg = new Uint8Array(await blob.arrayBuffer());
       const fileDate = (prev.photo.exif && prev.photo.exif.taken && prev.photo.exif.taken.slice(0, 7) !== prev.period ? prev.photo.exif.taken : `${meta.today}T08:00`);
       const seg = exifSegment(fileDate);
@@ -539,14 +593,79 @@
       out.set(seg, 2);
       out.set(jpg.subarray(2), 2 + seg.length);
       const fd = new FormData();
-      fd.append('photos', new Blob([out], { type: 'image/jpeg' }), `TEST-flipped-copy-of-${prev.period}.jpg`);
+      fd.append('photos', new Blob([out], { type: 'image/jpeg' }), `TEST-${k.file}-copy-of-${prev.period}.jpg`);
       fd.append('stampText', prev.photo.stampText || '');
       await api(`/api/projects/${S.pid}/periods/${S.period}/photos`, { method: 'POST', form: fd });
       await refresh();
-      setMsg($('#upMsg'), `Test photo sent: ${prev.label}'s photo, mirrored. Now press "Run the check" in step 3; the rule checks run before any AI.`, 'ok');
+      setMsg($('#upMsg'), `Test photo sent: ${prev.label}'s photo, ${k.done}. Now press "Run the check" in step 3; the rule checks run before any AI.`, 'ok');
     } catch (e) {
       setMsg($('#upMsg'), e.message, 'err');
     }
+  }
+
+  // Camera: one still frame from the device camera, uploaded like any photo. The stream stops after.
+  let camStream = null;
+  function stopCam() {
+    if (camStream) camStream.getTracks().forEach((t) => t.stop());
+    camStream = null;
+  }
+  function wireCamera() {
+    stopCam(); // a re-render removed any earlier preview
+    const btn = $('#camBtn');
+    if (!btn) return;
+    const video = $('#camVideo');
+    const ctl = $('#camCtl');
+    const msg = $('#camMsg');
+    const close = () => {
+      stopCam();
+      video.srcObject = null;
+      video.hidden = true;
+      ctl.hidden = true;
+      btn.disabled = false;
+    };
+    btn.onclick = async () => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setMsg(msg, 'No camera is available in this browser. Upload a photo from the device instead.', 'err');
+        return;
+      }
+      btn.disabled = true;
+      try {
+        camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+        video.srcObject = camStream;
+        video.hidden = false;
+        ctl.hidden = false;
+        await video.play();
+        setMsg(msg, 'Point the camera at the work, then press "Capture and add".');
+      } catch (e) {
+        close();
+        setMsg(msg, 'The camera is not available or permission was not given. Upload a photo from the device instead.', 'err');
+      }
+    };
+    $('#camStop').onclick = () => {
+      close();
+      setMsg(msg, '');
+    };
+    $('#camShot').onclick = async () => {
+      if (!camStream || !video.videoWidth) return;
+      const cv = document.createElement('canvas');
+      cv.width = video.videoWidth;
+      cv.height = video.videoHeight;
+      cv.getContext('2d').drawImage(video, 0, 0);
+      close();
+      try {
+        const blob = await new Promise((res) => cv.toBlob(res, 'image/jpeg', 0.9));
+        const fd = new FormData();
+        const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+        fd.append('photos', blob, `camera-${ts}.jpg`);
+        fd.append('stampText', '');
+        setMsg(msg, 'Uploading the photo...');
+        await api(`/api/projects/${S.pid}/periods/${S.period}/photos`, { method: 'POST', form: fd });
+        await refresh();
+        setMsg($('#upMsg'), 'Camera photo added. A browser capture carries no file date or GPS; run the check in step 3 when ready.', 'ok');
+      } catch (e) {
+        setMsg($('#camMsg'), e.message, 'err');
+      }
+    };
   }
 
   // Comparison lens over the checked photo, other months at the same spot.

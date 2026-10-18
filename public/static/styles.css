@@ -242,3 +242,60 @@ th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: v
 .lens-mode button:first-child { border-radius: 6px 0 0 6px; }
 .lens-mode button:last-child { border-radius: 0 6px 6px 0; border-left: 0; }
 .lens-mode button.on { background: #1c1b18; color: #fff; }
+
+/* --- review tools --- */
+.lens-mode button:not(:first-child):not(:last-child) { border-radius: 0; border-left: 0; }
+.change-map { position: absolute; inset: 0; width: 100%; height: 100%; display: none; pointer-events: none; z-index: 2; }
+.change-map.show { display: block; }
+.change-ctl { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; font-size: 13px; vertical-align: middle; }
+.change-ctl[hidden], .change-legend[hidden] { display: none; }
+.change-ctl input { width: 140px; }
+.change-legend { margin: 4px 0 0; }
+.test-photos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.test-photos .tp { display: flex; flex-direction: column; gap: 2px; max-width: 260px; }
+.cam-box { margin-top: 10px; padding: 10px; border: 1px dashed var(--line, #cfc8bb); border-radius: 8px; }
+.cam-box video { display: block; width: 100%; max-width: 320px; border-radius: 6px; background: #222; margin: 6px 0; }
+.cam-box video[hidden] { display: none; }
+.photo-quality { margin-top: 14px; padding: 10px 12px; border: 1px solid var(--line, #cfc8bb); border-left: 4px solid #8a8577; border-radius: 8px; background: rgba(138,133,119,.06); }
+.photo-quality h3 { margin: 0 0 4px; font-size: 14px; }
+.photo-quality .pq-photo { margin-top: 8px; }
+.photo-quality .pq-row { display: flex; gap: 8px; align-items: baseline; font-size: 13px; padding: 2px 0; }
+.photo-quality .pq-row .pq-k { min-width: 170px; }
+.photo-quality .pq-lvl { font: 600 11px var(--sans); padding: 0 7px; border-radius: 99px; border: 1px solid currentColor; text-transform: lowercase; }
+.photo-quality .pq-lvl.ok { color: #2f6b3a; }
+.photo-quality .pq-lvl.note { color: #8a6a12; }
+.photo-quality .pq-lvl.flag { color: #a3352b; }
+
+/* --- tour --- */
+html.pop-tour-on body { padding-bottom: 200px; }
+.tour-card { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); width: min(680px, calc(100% - 32px)); z-index: 1000; background: var(--ink); color: #f5f3ee; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,.3); padding: 14px 16px 12px; }
+.tour-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+.tour-count { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #bdb7aa; }
+.tour-title { font: 600 14px var(--serif); color: #bdb7aa; }
+.tour-text { margin: 0 0 8px; font: 16px/1.45 var(--serif); }
+.tour-where { margin: 0 0 8px; font-size: 13px; color: #d9d3c6; }
+.tour-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tour-card button { padding: 6px 12px; }
+.tour-card button.primary { background: #f5f3ee; color: var(--ink); border-color: #f5f3ee; }
+.tour-card .tour-end { margin-left: auto; background: transparent; color: #f5f3ee; border-color: #625e56; }
+.tour-msg { flex-basis: 100%; font-size: 13px; color: #f3c2b4; }
+.tour-msg:empty { display: none; }
+.tour-card button:focus-visible { outline: 2px solid #f5f3ee; outline-offset: 2px; }
+@media (max-width: 520px) {
+  .tour-card { bottom: 8px; padding: 12px; }
+  .tour-text { font-size: 15px; }
+  .tour-card .tour-end { margin-left: 0; }
+}
+
+/* --- insight --- */
+.insight-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 14px; }
+.insight-table th, .insight-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.insight-table th { font-weight: 600; color: var(--muted); }
+.insight-table tr.on td { background: var(--paper); font-weight: 600; }
+.insight-scroll { overflow-x: auto; }
+.insight-caveat { border-left: 3px solid var(--line); padding-left: 10px; margin-top: 10px; font-size: 14px; color: var(--muted); }
+.insight-flow { margin: 8px 0; padding-left: 22px; }
+.insight-flow li { margin: 6px 0; }
+.insight-flow li span { display: block; }
+.insight-fails li { margin: 4px 0; }
+.insight-foot { margin: 20px 0 32px; }

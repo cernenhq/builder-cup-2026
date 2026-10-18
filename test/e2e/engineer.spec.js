@@ -157,6 +157,57 @@ test.describe('Engineer / person in charge', () => {
     await expect(sw).toBeHidden();
   });
 
+  test('E12: change map on April 2026 against March shows a canvas over the photo and the legend', async ({ page }) => {
+    await signIn(page, 'eng-ana', 'engineer');
+    await page.getByTestId('period-select').selectOption('2026-04');
+    await page.getByTestId('lens-month').selectOption('2026-03');
+    await page.getByTestId('mode-change').click();
+    const cv = page.getByTestId('change-canvas');
+    await expect(cv).toBeVisible();
+    await expect(cv).toHaveAttribute('data-changed-share', /^[0-9.]+$/);
+    await expect(page.getByTestId('change-legend')).toHaveText('Red marks pixels that changed between the two months, after evening out brightness. Pixel change is not a verdict: lighting, weather and blur all change pixels.');
+    await expect(page.getByTestId('change-thr')).toBeVisible();
+    const before = Number(await cv.getAttribute('data-changed-share'));
+    await page.getByTestId('change-thr').fill('90');
+    await expect.poll(async () => Number(await cv.getAttribute('data-changed-share'))).toBeLessThanOrEqual(before);
+    await page.getByTestId('mode-lens').click();
+    await expect(cv).toBeHidden();
+    await expect(page.getByTestId('change-legend')).toBeHidden();
+  });
+
+  test('E13: more test photos and the camera button in step 1; photo quality panel in step 3', async ({ page }) => {
+    await signIn(page, 'eng-ana', 'engineer');
+    await expect(page.getByTestId('period-select')).toHaveValue('2026-05');
+    await expect(page.getByTestId('recompress-btn')).toBeVisible();
+    await expect(page.getByTestId('crop-btn')).toBeVisible();
+    await expect(page.getByTestId('flip-sample')).toContainText('a known limit of the reuse check');
+    await expect(page.getByTestId('cam-btn')).toHaveText("Take a site photo with this device's camera");
+    await expect(page.getByTestId('cam-box')).toContainText('Gemini Live on video is on the roadmap; this takes a still photo.');
+    await page.getByTestId('recompress-btn').click();
+    await expect(page.locator('#upMsg')).toContainText('Test photo sent');
+    await expect(page.getByTestId('photo-thumb').first()).toContainText('TEST-recompressed-copy-of-2026-04.jpg');
+    await expect(page.getByTestId('test-photo').first()).toBeVisible();
+    // The recompressed copy is caught by the reuse check; the 10% crop is a stated limit and is not.
+    await page.getByTestId('crop-btn').click();
+    await expect(page.getByTestId('photos-card')).toContainText('TEST-cropped-10pc-copy-of-2026-04.jpg');
+    await page.getByTestId('run-check').click();
+    const reuse = page.locator('[data-check="reuse"]');
+    await expect(reuse).toHaveCount(2);
+    await expect(reuse.nth(0)).toHaveAttribute('data-level', 'flag');
+    await expect(reuse.nth(1)).toHaveAttribute('data-level', 'ok');
+    await expect(reuse.nth(1)).toContainText('Crops can get past this check');
+
+    await page.getByTestId('period-select').selectOption('2026-04');
+    const q = page.getByTestId('photo-quality');
+    await expect(q).toBeVisible();
+    await expect(q).toContainText('This rates the photo as evidence, not the work.');
+    for (const k of ['gps', 'dates', 'view', 'resolution']) {
+      await expect(q.locator(`[data-q="${k}"]`).first()).toHaveAttribute('data-level', /^(ok|note|flag)$/);
+    }
+    // Kept apart from the line verdicts.
+    expect(await page.getByTestId('line-results').getByTestId('photo-quality').count()).toBe(0);
+  });
+
   test('E11: Draft with Gemini in step 4 shows an editable draft from the decision log only', async ({ page }) => {
     await signIn(page, 'eng-ana', 'engineer');
     await page.getByTestId('period-select').selectOption('2026-04');

@@ -35,6 +35,7 @@ function withTimeout(promise, ms) {
 
 // One structured line for Cloud Logging: every model call with its latency, tokens and estimated cost.
 function logCall(fields) {
+  require('./calllog').push(fields);
   if (process.env.NODE_ENV === 'test') return;
   console.log(JSON.stringify({ severity: 'INFO', message: 'gemini_call', ...fields }));
 }

@@ -31,7 +31,17 @@ module.exports = function registerFunderRoutes(app, { allow, wrap, today, config
         latestChecked: last ? { period: last.period, label: monthLabel(last.period), stale: !!last.checkStale, counts } : null,
         overdueMilestones: s.overdueMilestones.map((m) => ({ pct: m.pct, due: m.due })),
         overdueReports: s.obligations.filter((o) => o.status === 'overdue').map((o) => `${o.name}, ${periodKeyLabel(o.periodKey)}`),
-        hasOverlay: s.project.id === 'P-001'
+        hasOverlay: s.project.id === 'P-001',
+        // Site photos per month (the office's photos, not transmittal receipts), for Lens, Swipe and Change map.
+        photosByMonth: (() => {
+          const out = {};
+          const checkedPhoto = Object.fromEntries(checked.map((p) => [p.period, (p.check.photoIds || [])[0]]));
+          for (const p of s.data.periods || []) {
+            const id = checkedPhoto[p.period];
+            if (id) out[p.period] = { period: p.period, label: monthLabel(p.period), photoId: id };
+          }
+          return Object.values(out).sort((a, b) => b.period.localeCompare(a.period));
+        })()
       };
     });
     res.json({ today: today(), projects, note: 'Read only. What a person in the office decided, not an AI verdict. Payment decisions stay with you.' });

@@ -11,6 +11,7 @@ const { monthLabel } = require('../domain/escalation');
 const AUDIENCES = {
   office: 'the office head of the municipal engineering office (an internal note: what the photos support, what they contradict, what they cannot show, and what to follow up, such as a site visit)',
   mayor: 'the municipal mayor (three or four short sentences: only what needs the mayor\'s attention, in plain words)',
+  owner: 'the owner or lender who releases money against progress (a short report: what the photos support, what they contradict, what they cannot show, and what to check before the next release; the note decides nothing about payment)',
   public: 'residents near the project (a plain progress note: no verdict labels, no staff names, no judgement of anyone, only what the photos show and what they cannot show)'
 };
 

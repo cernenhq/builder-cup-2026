@@ -8,5 +8,4 @@ playwright-report/
 docs/screens/
 test/
 deploy/.env.deploy
-eval/
 scripts/

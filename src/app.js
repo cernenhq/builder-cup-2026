@@ -478,7 +478,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   }));
 
   // A plain-language note drafted by Gemini from the decision log only. Nothing is sent; a person edits it.
-  r.post('/api/projects/:id/periods/:period/draft-note', allow('engineer', 'reviewer'), wrap(async (req, res) => {
+  r.post('/api/projects/:id/periods/:period/draft-note', allow('engineer', 'reviewer', 'funder'), wrap(async (req, res) => {
     const p = await loadProject(req, res);
     if (!p) return;
     try {
@@ -735,6 +735,7 @@ function createApp({ config, store, rootStore, photoStore, readers, live, spend,
   // ---------- owner view and schedule trajectory (src/routes/owner.js) ----------
   require('./routes/owner')(r, { store, allow, wrap, today, config });
   require('./routes/funder')(r, { store, allow, wrap, today, config });
+  require('./routes/insight')(r, { allow, wrap, config, spend, sendPage: (...a) => sendPage(...a) });
   require('./routes/translate')(r, { store, rootStore, wrap, config, spend, publicFor: (id) => publicFor(id) });
   require('./routes/analytics')(r, { allow, wrap, config, analytics });
 

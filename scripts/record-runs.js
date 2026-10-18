@@ -51,7 +51,7 @@ async function main() {
         const p1 = await store.get('projects', 'P-001');
         // Saved drafts for the seeded April decisions, one per audience. Written first, from the seeded
         // state, before any check is re-run (a re-run makes the seeded decisions belong to an earlier run).
-        for (const audience of ['office', 'mayor', 'public']) {
+        for (const audience of ['office', 'mayor', 'public', 'owner']) {
           try {
             const n = await draftNote({ store, rootStore, live, spend, judge: true, config, project: p1, period: '2026-04', audience });
             newNoteIds.add(n.key);
@@ -118,7 +118,14 @@ async function main() {
   // Keep only drafts that match the current seeded decisions (older ones can never match again).
   const notecache = (await rootStore.find('notecache', {})).filter((n) => newNoteIds.has(n.id) || !NOTES_ONLY);
   const out = path.join(__dirname, '..', 'src', 'seed', 'saved-runs.json');
-  fs.writeFileSync(out, `${JSON.stringify({ recordedAt: new Date().toISOString(), model: config.geminiModel, aicache, notecache }, null, 1)}\n`);
+  // Keep any saved Cloud Vision results (written by scripts/record-vision.js).
+  let visioncache = [];
+  try {
+    visioncache = JSON.parse(fs.readFileSync(out, 'utf8')).visioncache || [];
+  } catch (e) {
+    visioncache = [];
+  }
+  fs.writeFileSync(out, `${JSON.stringify({ recordedAt: new Date().toISOString(), model: config.geminiModel, aicache, notecache, visioncache }, null, 1)}\n`);
   const stamp = new Date().toISOString().replace(/[:.]/g, '').slice(0, 15);
   if (NOTES_ONLY) {
     console.log(`Notes re-recorded (${notecache.length}); no evaluation report written. Estimated spend: US$${(await spend.today()).toFixed(4)}`);

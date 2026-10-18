@@ -8,6 +8,8 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY src ./src
 COPY public ./public
 COPY seed-photos ./seed-photos
+# The scored results, read by the Evidence page.
+COPY eval ./eval
 # Writable folder for the local photo adapter (only used when PHOTO_BUCKET is not set).
 RUN mkdir -p /app/data && chown node:node /app/data
 USER node

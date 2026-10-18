@@ -1,10 +1,11 @@
 // Comparison lens and swipe: move over the photo and see another month in the same spot (lens), or
-// drag across it to reveal the other month from the left edge up to the pointer (swipe).
+// drag across it to reveal the other month from the left edge up to the pointer (swipe), or see a change map (red where pixels differ after evening out brightness).
 // Plain script, no modules. Exposes window.PoPLens.attach(opts).
 // Each month's photo is already aligned to the latest view (same frame), so the lens shows the
 // other month at the same position. When the rule checks say two views do not line up, the lens
 // says "not comparable" and stays off for that month.
 (function () {
+  const CHANGE_LEGEND = 'Red marks pixels that changed between the two months, after evening out brightness. Pixel change is not a verdict: lighting, weather and blur all change pixels.';
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
   // opts: {
@@ -28,8 +29,10 @@
       <select data-testid="lens-month"><option value="">Lens off</option>${months
         .map((m) => `<option value="${esc(m.period)}" ${m.period === selected ? 'selected' : ''}>${esc(m.label)}${m.status === 'no' ? ' (not comparable)' : m.status === 'caution' ? ' (compare with caution)' : ''}</option>`)
         .join('')}</select></label>
-      <span class="seg lens-mode" role="group" aria-label="Comparison mode"><button type="button" data-mode="lens" class="on" data-testid="mode-lens">Lens</button><button type="button" data-mode="swipe" data-testid="mode-swipe">Swipe</button></span>
-      <div class="mini lens-status" data-testid="lens-status"></div></div>`;
+      <span class="seg lens-mode" role="group" aria-label="Comparison mode"><button type="button" data-mode="lens" class="on" data-testid="mode-lens">Lens</button><button type="button" data-mode="swipe" data-testid="mode-swipe">Swipe</button><button type="button" data-mode="change" data-testid="mode-change">Change map</button></span>
+      <label class="change-ctl" hidden>Change threshold <input type="range" min="5" max="90" step="1" value="30" data-testid="change-thr"></label>
+      <div class="mini lens-status" data-testid="lens-status"></div>
+      <p class="mini change-legend" data-testid="change-legend" hidden>${esc(CHANGE_LEGEND)}</p></div>`;
     const sel = picker.querySelector('select');
     const status = picker.querySelector('.lens-status');
 
@@ -51,6 +54,85 @@
     const swipeTag = swipe.querySelector('.swipe-tag');
     let mode = 'lens';
     const modeBtns = picker.querySelectorAll('[data-mode]');
+    // Change map: a canvas over the photo, red where the two months differ after evening out brightness.
+    const cmap = document.createElement('canvas');
+    cmap.className = 'change-map';
+    cmap.setAttribute('data-testid', 'change-canvas');
+    cmap.setAttribute('aria-hidden', 'true');
+    stage.appendChild(cmap);
+    const thrCtl = picker.querySelector('.change-ctl');
+    const thr = picker.querySelector('[data-testid="change-thr"]');
+    const legend = picker.querySelector('.change-legend');
+    const baseImg = stage.querySelector('img');
+    const imgCache = {};
+    let drawSeq = 0;
+    function loadImage(url) {
+      if (!imgCache[url]) {
+        imgCache[url] = new Promise((res, rej) => {
+          const im = new Image();
+          im.onload = () => res(im);
+          im.onerror = () => rej(new Error('Could not load the photo.'));
+          im.src = url;
+        });
+      }
+      return imgCache[url];
+    }
+    // Luminance per pixel, shifted so each image's mean luminance is the same (zero).
+    function lum(data, n) {
+      const out = new Float32Array(n);
+      let sum = 0;
+      for (let i = 0; i < n; i++) {
+        out[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+        sum += out[i];
+      }
+      const mean = sum / (n || 1);
+      for (let i = 0; i < n; i++) out[i] -= mean;
+      return out;
+    }
+    async function drawChange(m) {
+      const seq = ++drawSeq;
+      const r = stage.getBoundingClientRect();
+      const w = Math.max(1, Math.min(640, Math.round(r.width || 640)));
+      const h = Math.max(1, Math.round(w * ((r.height || r.width * 0.56) / (r.width || 1))));
+      let a, b;
+      try {
+        [a, b] = await Promise.all([loadImage(baseImg ? baseImg.currentSrc || baseImg.src : ''), loadImage(m.url)]);
+      } catch (e) {
+        if (seq === drawSeq) status.textContent = 'The change map could not load one of the photos.';
+        return;
+      }
+      if (seq !== drawSeq || mode !== 'change') return;
+      const work = document.createElement('canvas');
+      work.width = w;
+      work.height = h;
+      const x = work.getContext('2d', { willReadFrequently: true });
+      x.drawImage(a, 0, 0, w, h);
+      const d1 = x.getImageData(0, 0, w, h).data;
+      x.clearRect(0, 0, w, h);
+      x.drawImage(b, 0, 0, w, h);
+      const d2 = x.getImageData(0, 0, w, h).data;
+      const n = w * h;
+      const l1 = lum(d1, n);
+      const l2 = lum(d2, n);
+      const t = Number(thr.value) || 30;
+      const out = x.createImageData(w, h);
+      let changed = 0;
+      for (let i = 0; i < n; i++) {
+        const v = Math.abs(l1[i] - l2[i]);
+        if (v > t) {
+          changed++;
+          out.data[i * 4] = 225;
+          out.data[i * 4 + 1] = 40;
+          out.data[i * 4 + 2] = 30;
+          out.data[i * 4 + 3] = Math.min(190, 90 + (v - t) * 2);
+        }
+      }
+      cmap.width = w;
+      cmap.height = h;
+      cmap.getContext('2d').putImageData(out, 0, 0);
+      cmap.setAttribute('data-changed-share', String(Math.round((changed / (n || 1)) * 1000) / 10));
+      cmap.classList.add('show');
+    }
 
     function current() {
       return months.find((m) => m.period === selected) || null;
@@ -60,6 +142,10 @@
       stage.classList.remove('lens-on', 'lens-blocked');
       lens.classList.remove('show');
       swipe.classList.remove('show');
+      cmap.classList.remove('show');
+      drawSeq++;
+      thrCtl.hidden = true;
+      legend.hidden = true;
       stage.removeAttribute('data-lens-month');
       if (!m) {
         status.textContent = `Lens off. Pick a month, then move over the photo.`;
@@ -80,13 +166,20 @@
       swipe.style.backgroundImage = `url("${m.url}")`;
       tag.textContent = m.label;
       swipeTag.textContent = `${m.label} | ${opts.currentLabel || 'this month'}`;
+      if (mode === 'change') {
+        thrCtl.hidden = false;
+        legend.hidden = false;
+        status.innerHTML = `${m.status === 'caution' ? '<span class="chip lvl-1">Compare with caution</span> ' : ''}Change map: ${esc(opts.currentLabel || 'this month')} against ${esc(m.label)}. Move the threshold to show only bigger changes. ${esc(m.note || '')}`;
+        drawChange(m);
+        return;
+      }
       const how = mode === 'swipe' ? `Drag across the photo: left of the line is ${esc(m.label)}, right of it is ${esc(opts.currentLabel || 'this month')}.` : `Move over the photo: the circle shows ${esc(m.label)} in the same spot as ${esc(opts.currentLabel || 'this month')}.`;
       status.innerHTML = `${m.status === 'caution' ? '<span class="chip lvl-1">Compare with caution</span> ' : ''}${how} ${esc(m.note || '')}`;
     }
 
     function move(clientX, clientY) {
       const m = current();
-      if (!m || m.status === 'no') return;
+      if (!m || m.status === 'no' || mode === 'change') return;
       const r = stage.getBoundingClientRect();
       const x = clientX - r.left;
       const y = clientY - r.top;
@@ -126,13 +219,17 @@
         update();
       })
     );
+    thr.addEventListener('input', () => {
+      const m = current();
+      if (mode === 'change' && m && m.status !== 'no') drawChange(m);
+    });
     sel.addEventListener('change', () => {
       selected = sel.value;
       update();
       if (opts.onChange) opts.onChange(selected);
     });
     update();
-    return { lens, swipe, select: sel };
+    return { lens, swipe, changeMap: cmap, select: sel };
   }
 
   window.PoPLens = { attach };

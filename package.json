@@ -2,7 +2,7 @@
   "name": "proof-of-progress",
   "version": "0.1.0",
   "private": true,
-  "description": "Engineering office tool: claimed progress checked against milestone photos, one entry flowing to four report drafts.",
+  "description": "For whoever releases money against construction progress: each claimed line checked against site photos before payment, by the office that reviews the works.",
   "main": "src/server.js",
   "type": "commonjs",
   "engines": {

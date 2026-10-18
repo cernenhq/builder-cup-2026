@@ -12,7 +12,9 @@
   //   stage: Element (the .stage holding the current photo and evidence boxes),
   //   picker: Element (where the month picker goes),
   //   currentLabel: 'May 2026',
-  //   months: [{ period, label, url, status: 'yes'|'caution'|'no'|'aligned', note }],
+  //   months: [{ period, label, url, status: 'yes'|'caution'|'no'|'aligned', note, ai }],
+  //   (ai: true marks the saved AI illustration of the finished building: shown in Lens and Swipe with a
+  //   label, never in Change map, since a pixel difference against an illustration means nothing)
   //   selected: period or '' (off),
   //   onChange: (period) => void
   // }
@@ -27,7 +29,7 @@
     let selected = months.some((m) => m.period === opts.selected) ? opts.selected : '';
     picker.innerHTML = `<div class="lens-pick"><label>Compare like with like: see another month in the same spot
       <select data-testid="lens-month"><option value="">Lens off</option>${months
-        .map((m) => `<option value="${esc(m.period)}" ${m.period === selected ? 'selected' : ''}>${esc(m.label)}${m.status === 'no' ? ' (not comparable)' : m.status === 'caution' ? ' (compare with caution)' : ''}</option>`)
+        .map((m) => `<option value="${esc(m.period)}" ${m.period === selected ? 'selected' : ''}>${esc(m.label)}${m.ai ? '' : m.status === 'no' ? ' (not comparable)' : m.status === 'caution' ? ' (compare with caution)' : ''}</option>`)
         .join('')}</select></label>
       <span class="seg lens-mode" role="group" aria-label="Comparison mode"><button type="button" data-mode="lens" class="on" data-testid="mode-lens">Lens</button><button type="button" data-mode="swipe" data-testid="mode-swipe">Swipe</button><button type="button" data-mode="change" data-testid="mode-change">Change map</button></span>
       <label class="change-ctl" hidden>Change threshold <input type="range" min="5" max="90" step="1" value="30" data-testid="change-thr"></label>
@@ -166,6 +168,11 @@
       swipe.style.backgroundImage = `url("${m.url}")`;
       tag.textContent = m.label;
       swipeTag.textContent = `${m.label} | ${opts.currentLabel || 'this month'}`;
+      const aiChip = m.ai ? '<span class="chip lvl-1" data-testid="lens-ai">AI illustration, not evidence</span> ' : '';
+      if (mode === 'change' && m.ai) {
+        status.innerHTML = `${aiChip}Change map is off for the AI illustration: it is not a photo, so a pixel difference means nothing. Use Lens or Swipe. ${esc(m.note || '')}`;
+        return;
+      }
       if (mode === 'change') {
         thrCtl.hidden = false;
         legend.hidden = false;
@@ -174,7 +181,7 @@
         return;
       }
       const how = mode === 'swipe' ? `Drag across the photo: left of the line is ${esc(m.label)}, right of it is ${esc(opts.currentLabel || 'this month')}.` : `Move over the photo: the circle shows ${esc(m.label)} in the same spot as ${esc(opts.currentLabel || 'this month')}.`;
-      status.innerHTML = `${m.status === 'caution' ? '<span class="chip lvl-1">Compare with caution</span> ' : ''}${how} ${esc(m.note || '')}`;
+      status.innerHTML = `${aiChip || (m.status === 'caution' ? '<span class="chip lvl-1">Compare with caution</span> ' : '')}${how} ${esc(m.note || '')}`;
     }
 
     function move(clientX, clientY) {

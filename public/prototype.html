@@ -338,7 +338,7 @@ body.demo nav{opacity:.35}
     <div class="controls" style="margin-top:10px">
      <button class="btn primary" id="gemRun">Run Gemini on this photo</button>
      <button class="btn" id="gemCmp">Compare with previous month</button>
-     <button class="btn" id="gemLook">Generate finished look (AI)</button>
+     <button class="btn" id="gemLook">Regenerate finished look (live AI, judge code)</button>
      <span class="btn" style="position:relative;overflow:hidden">Load a render<input type="file" id="renderFile" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer"></span>
     </div>
     <div class="mini" id="gemOut"></div>
@@ -2722,6 +2722,8 @@ function moreWire(){
  if(LS.get('n1_safe',false))setSafe(true);
 }
 
+// Saved finished look: made once by Gemini 3.1 Flash Image from the April 2026 frame; loads with the page.
+(function(){const im=new Image();im.onload=()=>{if(RV.render)return;RV.render=im;RV.renderLabel='Made once by AI (Gemini 3.1 Flash Image) from the April 2026 photo, saved · illustration, not evidence, not the design';try{if(RV.ref==='render')rvDraw();}catch(e){}};im.src=location.pathname.replace(/\/prototype\/?$/,'')+'/static/finished-look.jpg';})();
 // ================= INIT =================
 (async function init(){
  renderRoles();

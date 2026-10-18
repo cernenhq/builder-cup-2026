@@ -127,6 +127,29 @@ test.describe('Engineer / person in charge', () => {
     await expect(page.getByTestId('check-card')).toContainText('not proof');
   });
 
+  test('E10b: the saved AI finished look is a Lens and Swipe reference with no model call; Change map is off for it', async ({ page }) => {
+    const calls = [];
+    page.on('request', (r) => { if (/\/api\/(proto\/gemini|insight|check)/.test(r.url()) && r.method() === 'POST') calls.push(r.url()); });
+    await signIn(page, 'eng-ana', 'engineer');
+    await page.getByTestId('period-select').selectOption('2026-04');
+    const pick = page.getByTestId('lens-month');
+    await expect(pick.locator('option[value="ai-finished"]')).toHaveText('AI finished look (illustration)');
+    await pick.selectOption('ai-finished');
+    await expect(page.getByTestId('lens-ai')).toContainText('not evidence');
+    await page.getByTestId('mode-swipe').click();
+    const st = page.locator('#lensStage .stage');
+    await st.hover({ position: { x: 150, y: 120 } });
+    const sw = page.getByTestId('swipe');
+    await expect(sw).toBeVisible();
+    expect(await sw.evaluate((el) => el.style.backgroundImage)).toContain('/static/finished-look.jpg');
+    const img = await page.request.get('/static/finished-look.jpg');
+    expect(img.status()).toBe(200);
+    await page.getByTestId('mode-change').click();
+    await expect(page.getByTestId('lens-status')).toContainText('Change map is off for the AI illustration');
+    await expect(page.getByTestId('change-canvas')).toBeHidden();
+    expect(calls).toEqual([]);
+  });
+
   test('E10: comparison lens on April 2026 with a month picker; other months show in the same spot', async ({ page }) => {
     await signIn(page, 'eng-ana', 'engineer');
     await page.getByTestId('period-select').selectOption('2026-04');

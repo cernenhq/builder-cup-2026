@@ -668,6 +668,9 @@
     };
   }
 
+  // The saved AI illustration of the finished building (made once; Lens and Swipe cost nothing).
+  const FINISHED_LOOK = () => ({ period: 'ai-finished', label: 'AI finished look (illustration)', url: PoP.url('/static/finished-look.jpg'), status: 'aligned', ai: true, note: 'Made once by Gemini 3.1 Flash Image from the April 2026 frame; an illustration, not evidence and not the design. Not used by any check.' });
+
   // Comparison lens over the checked photo, other months at the same spot.
   function lensMonths() {
     const c = S.per.check;
@@ -702,14 +705,15 @@
           }
         }
         return { period: m.period, label: m.label, url: ph.url, status, note };
-      });
+      })
+      .concat(S.pid === 'P-001' && cur && /source video clip/.test(cur.metadataSource || '') ? [FINISHED_LOOK()] : []);
   }
   function attachLens() {
     const st = $('#lensStage .stage');
     if (!st || !window.PoPLens) return;
     const months = lensMonths();
     if (S.lensPeriod === null) {
-      const first = months.find((m) => m.period < S.period && m.status !== 'no') || months.find((m) => m.status !== 'no');
+      const first = months.find((m) => !m.ai && m.period < S.period && m.status !== 'no') || months.find((m) => !m.ai && m.status !== 'no');
       S.lensPeriod = first ? first.period : '';
     }
     window.PoPLens.attach({ stage: st, picker: $('#lensPicker'), currentLabel: S.per.label, months, selected: S.lensPeriod, onChange: (p) => (S.lensPeriod = p) });

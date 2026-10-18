@@ -36,12 +36,18 @@ app = app.replace("{k:'reports',n:'Reports',who:['owner','public']},", "{k:'repo
 app = once(app, 'function renderGemini(){', 'function renderGemini(){return;')
 app = once(app, 'function geminiWire(){', 'function geminiWire(){return;')
 app = app.replace('// ================= INIT =================', more + '\n// ================= INIT =================', 1)
+# The finished look is made once and saved (public/static/finished-look.jpg), so the "render" reference
+# for Lens and Swipe loads with the page and costs nothing. Regenerating stays a live call (judge code).
+app = once(app, '// ================= INIT =================', """// Saved finished look: made once by Gemini 3.1 Flash Image from the April 2026 frame; loads with the page.
+(function(){const im=new Image();im.onload=()=>{if(RV.render)return;RV.render=im;RV.renderLabel='Made once by AI (Gemini 3.1 Flash Image) from the April 2026 photo, saved · illustration, not evidence, not the design';try{if(RV.ref==='render')rvDraw();}catch(e){}};im.src=location.pathname.replace(/\\/prototype\\/?$/,'')+'/static/finished-look.jpg';})();
+// ================= INIT =================""")
 
 html = r('app.html')
 html = cut_between(html, '<!-- GEMINI -->', '<!-- EVALS -->', '<!-- GEMINI -->\n<section class="view" id="v-gemini"><div class="card"><p>Live Gemini runs happen on the server in the workbench, with the judge access code. This prototype replays recorded results.</p></div></section>\n')
 for sec in ['<!-- IDEAS -->']:
     i = html.index(sec); j = html.index('</section>', i) + len('</section>')
     html = html[:i] + '<section class="view" id="v-ideas"></section>' + html[j:]
+html = once(html, 'id="gemLook">Generate finished look (AI)<', 'id="gemLook">Regenerate finished look (live AI, judge code)<')
 html = once(html, 'Internal prototype · unblurred site photos · trade-secret mechanisms in Ideas', 'Interactive prototype · recorded results; live Gemini with the judge access code')
 
 L = SRC / 'lib'

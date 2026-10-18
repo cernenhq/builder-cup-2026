@@ -24,7 +24,9 @@
   for (const p of o.projects.filter((x) => x.photosByMonth && x.photosByMonth.length > 1 && window.PoPLens)) {
     const st = document.querySelector(`#cmp-stage-${p.id} .stage`);
     const months = p.photosByMonth.slice(1).map((m) => ({ period: m.period, label: m.label, url: PoP.url('/api/photos/' + m.photoId), status: 'aligned', note: 'Prepared demo frames, aligned to the same view.' }));
-    window.PoPLens.attach({ stage: st, picker: document.getElementById(`cmp-pick-${p.id}`), currentLabel: p.photosByMonth[0].label, months, selected: months[months.length - 1].period });
+    // The saved AI illustration of the finished building, made once: Lens and Swipe on it cost nothing.
+    if (p.id === 'P-001') months.push({ period: 'ai-finished', label: 'AI finished look (illustration)', url: PoP.url('/static/finished-look.jpg'), status: 'aligned', ai: true, note: 'Made once by Gemini 3.1 Flash Image from the April 2026 frame; an illustration, not evidence and not the design.' });
+    window.PoPLens.attach({ stage: st, picker: document.getElementById(`cmp-pick-${p.id}`), currentLabel: p.photosByMonth[0].label, months, selected: months.filter((m) => !m.ai).slice(-1)[0].period });
   }
   main.addEventListener('click', async (ev) => {
     if (ev.target.closest('[data-print]')) return window.print();
